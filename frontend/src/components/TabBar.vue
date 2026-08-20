@@ -8,7 +8,7 @@
       size="22px"
     >
       <nut-tabbar-item class="tabbar-item" to="/subs" icon="link" :tab-title="t('tabBar.sub')" />
-      <nut-tabbar-item class="tabbar-item" to="/tools" icon="more-x" :tab-title="t('tabBar.tools')" />
+      <nut-tabbar-item class="tabbar-item" to="/tools" icon="category" :tab-title="t('tabBar.tools')" />
       <nut-tabbar-item class="tabbar-item" to="/my" icon="setting" :tab-title="t('tabBar.my')" />
     </nut-tabbar>
   </div>

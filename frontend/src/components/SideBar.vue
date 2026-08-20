@@ -16,7 +16,7 @@
           :class="{ active: activeTab === 1 }" 
           @click="router.push('/tools')"
         >
-          <nut-icon name="more-x" size="22px" />
+          <nut-icon name="category" size="22px" />
           <span class="label" v-show="isExpanded">{{ $t('tabBar.tools') }}</span>
         </div>
 
