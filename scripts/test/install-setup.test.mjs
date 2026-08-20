@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { createQuickSetup, parseRemoteSourceUrls } from "../lib/install-setup.mjs";
@@ -34,4 +35,11 @@ test("createQuickSetup can produce an empty web-configured install", () => {
   assert.deepEqual(setup.sources, []);
   assert.deepEqual(setup.collections, []);
   assert.equal(setup.deployment.workerName, "sub-store-cloudflare");
+});
+
+test("local development starts with built assets and migrated D1", () => {
+  const scripts = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")).scripts;
+  assert.equal(scripts["build:frontend"], "pnpm --dir frontend run build");
+  assert.match(scripts.dev, /pnpm run build:frontend/);
+  assert.match(scripts.dev, /wrangler d1 migrations apply DB --local --config wrangler\.jsonc/);
 });

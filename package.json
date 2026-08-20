@@ -29,9 +29,9 @@
   },
   "scripts": {
     "setup": "pnpm install && pnpm run scripts:generate",
-    "dev": "pnpm run scripts:generate && pnpm --dir cloudflare run dev",
+    "dev": "pnpm run build:frontend && pnpm run scripts:generate && pnpm --dir cloudflare exec wrangler d1 migrations apply DB --local --config wrangler.jsonc && pnpm --dir cloudflare run dev",
     "build": "pnpm run scripts:generate && pnpm run build:frontend",
-    "build:frontend": "VITE_API_URL=/ pnpm --dir frontend run build",
+    "build:frontend": "pnpm --dir frontend run build",
     "install:cloudflare": "node scripts/install-cloudflare.mjs",
     "install:quick": "node scripts/install-cloudflare.mjs --quick",
     "install:doctor": "node scripts/install-cloudflare.mjs --doctor",
