@@ -38,7 +38,7 @@ import {
   upsertSource,
   upsertTemplate,
 } from "../lib/store";
-import { convertSubscriptionContent, normalizeTargetAlias, previewSourceContent, previewSubscription } from "../lib/subscription";
+import { convertSubscriptionContent, inspectRemoteSubscription, normalizeTargetAlias, parseContentDispositionFilename, previewSourceContent, previewSubscription } from "../lib/subscription";
 import type {
   CollectionRecord,
   FilterRule,
@@ -122,9 +122,11 @@ apiRoutes.post("/sources", async (c) => {
   const input = await c.req.json<JsonMap>();
   const payloadError = validateSourcePayload(input);
   if (payloadError) return failed(c, payloadError);
-  const idError = validateRecordId(input.id || input.name, "Source");
+  const requestedId = stringValue(input.id);
+  const idError = requestedId ? validateRecordId(requestedId, "Source") : undefined;
   if (idError) return failed(c, idError);
-  const source = fromApiSource(input);
+  const id = requestedId || await nextAvailableSourceId(c.env, input);
+  const source = fromApiSource({ ...input, id });
   if (await getSource(c.env, source.id || "")) return failed(c, "Source id already exists", 409);
   const validationError = validateSource(source);
   if (validationError) return failed(c, validationError);
@@ -357,6 +359,24 @@ apiRoutes.post("/utils/node-info", async (c) => {
       city: stringValue(data.city),
       connection: objectValue(data.connection),
     });
+  } catch (error) {
+    return failed(c, error instanceof Error ? error.message : String(error), 502);
+  }
+});
+
+apiRoutes.post("/utils/remote-source-profile", async (c) => {
+  const input: JsonMap = await c.req.json<JsonMap>().catch(() => ({}));
+  const url = stringValue(input.url).trim();
+  if (!/^https?:\/\/\S+$/i.test(url)) return failed(c, "Remote source URL must use http or https");
+  try {
+    const [metadata, sources, collections] = await Promise.all([
+      inspectRemoteSubscription(url, await getSettings(c.env)),
+      listSources(c.env),
+      listCollections(c.env),
+    ]);
+    const name = inferRemoteSourceName(metadata.contentDisposition, url);
+    const id = availableRecordId(slugifyRecordId(name, url), [...sources, ...collections].map((record) => record.id));
+    return success(c, { id, name });
   } catch (error) {
     return failed(c, error instanceof Error ? error.message : String(error), 502);
   }
@@ -658,6 +678,45 @@ function validateCollectionPayload(input: JsonMap, partial = false) {
     return "Collection sourceIds must be an array";
   }
   return undefined;
+}
+
+function inferRemoteSourceName(contentDisposition: string | undefined, url: string) {
+  const filename = parseContentDispositionFilename(contentDisposition || "")?.replace(/\.(?:yaml|yml|json|txt)$/i, "").trim();
+  if (filename) return filename;
+  return new URL(url).hostname.replace(/^www\./i, "");
+}
+
+function slugifyRecordId(name: string, url: string) {
+  const slug = slugifyIdPart(name);
+  if (slug) return slug;
+  return slugifyIdPart(new URL(url).hostname) || "remote-source";
+}
+
+async function nextAvailableSourceId(env: SubStoreEnv, input: JsonMap) {
+  const name = stringValue(input.name);
+  const url = stringValue(input.url).split(/\r?\n/).map((item) => item.trim()).find(Boolean);
+  const base = slugifyIdPart(name) || (url ? safeUrlIdPart(url) : "") || "source";
+  return availableRecordId(base, (await listSources(env)).map((source) => source.id));
+}
+
+function safeUrlIdPart(url: string) {
+  try {
+    return slugifyIdPart(new URL(url).hostname);
+  } catch {
+    return "";
+  }
+}
+
+function slugifyIdPart(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
+}
+
+function availableRecordId(base: string, existingIds: string[]) {
+  const existing = new Set(existingIds);
+  for (let suffix = 1; ; suffix += 1) {
+    const candidate = suffix === 1 ? base : `${base.slice(0, 64 - String(suffix).length - 1)}-${suffix}`;
+    if (!existing.has(candidate)) return candidate;
+  }
 }
 
 function validateRecordId(input: unknown, label: string) {

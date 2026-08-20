@@ -105,6 +105,20 @@ export async function previewSourceContent(source: SubscriptionSource, settings?
   };
 }
 
+export async function inspectRemoteSubscription(url: string, settings?: AppSettings) {
+  const remoteUrl = splitSourceUrls(url)[0];
+  if (!remoteUrl) throw new Error("Remote source URL must use http or https");
+  const source: SubscriptionSource = {
+    id: "remote-source-profile",
+    name: "Remote source profile",
+    type: "remote",
+    url: remoteUrl,
+    content: "",
+    meta: { cacheTtl: 0 },
+  };
+  return (await fetchSubscriptionUrl(remoteUrl, source, settings)).metadata;
+}
+
 export function validateSubscriptionContent(raw: string) {
   const proxies = parseProxies(decodeMaybeBase64(raw));
   if (proxies.length === 0) throw new Error(formatInvalidLocalContentError(raw));
@@ -1763,12 +1777,27 @@ function setInternalMetadataHeader(headers: Headers, name: string, value: string
   if (value) headers.set(name, value.slice(0, 4096));
 }
 
-function safeContentDisposition(value: string) {
+export function parseContentDispositionFilename(value: string) {
   if (!value || /[\r\n]/.test(value)) return undefined;
   const filename = value.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i)?.[1]?.trim();
   if (!filename) return undefined;
+  return decodeContentDispositionFilename(filename);
+}
+
+function safeContentDisposition(value: string) {
+  const filename = parseContentDispositionFilename(value);
+  if (!filename) return undefined;
   const safe = filename.replace(/[^a-zA-Z0-9._()\-\u4e00-\u9fff ]/g, "_").slice(0, 120);
-  return safe ? `attachment; filename="${safe}"` : undefined;
+  return safe ? `attachment; filename*=UTF-8''${encodeURIComponent(safe)}` : undefined;
+}
+
+function decodeContentDispositionFilename(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch (error) {
+    if (error instanceof URIError) return value;
+    throw error;
+  }
 }
 
 function surgeType(proxy: ProxyNode) {

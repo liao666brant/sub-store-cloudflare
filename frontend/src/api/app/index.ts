@@ -432,6 +432,7 @@ const fromApiSource = (source: JsonMap): Sub => {
 };
 
 const toApiSource = (data: JsonMap) => {
+  const id = String(data.id || data.name || '').trim();
   const meta = {
     ...(data.meta && typeof data.meta === 'object' ? data.meta : {}),
     actions: toActionMeta(data.process),
@@ -457,8 +458,8 @@ const toApiSource = (data: JsonMap) => {
   };
 
   return {
-    id: data.id || data.name,
-    name: data.displayName || data['display-name'] || data.id || data.name,
+    ...(id ? { id } : {}),
+    name: data.displayName || data['display-name'] || id,
     type: data.source === 'local' || data.type === 'local' ? 'local' : 'remote',
     url: data.url || '',
     content: data.content || '',
@@ -580,6 +581,7 @@ export function useCloudflareApi() {
     restoreRecycleEntry: (id: string): AxiosPromise<MyAxiosRes> => request({ url: `/api/recycle-bin/${encodeURIComponent(id)}/restore`, method: 'post' }),
     deleteRecycleEntry: (id: string): AxiosPromise<MyAxiosRes> => request({ url: `/api/recycle-bin/${encodeURIComponent(id)}`, method: 'delete' }),
     getNodeInfo: (data: any): AxiosPromise<MyAxiosRes> => request({ url: '/api/utils/node-info', method: 'post', data }),
+    getRemoteSourceProfile: (url: string): AxiosPromise<MyAxiosRes> => request({ url: '/api/utils/remote-source-profile', method: 'post', data: { url } }),
     createTemplate: (data: any): AxiosPromise<MyAxiosRes> => {
       return request({
         url: '/api/templates',

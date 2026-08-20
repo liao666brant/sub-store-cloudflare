@@ -1,5 +1,5 @@
 import { env, exports as workerExports } from "cloudflare:workers";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const ADMIN_TOKEN = "test-admin-token";
 const DOWNLOAD_TOKEN = "test-download-token";
@@ -36,6 +36,74 @@ describe("Worker and D1 integration", () => {
     const authorized = await workerRequest("/api/env");
     expect(authorized.status).toBe(200);
     expect(getPath(await jsonObject(authorized), "status")).toBe("success");
+  });
+
+  it("infers a remote source name and available id from its response metadata", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() => Promise.resolve(new Response(
+      "trojan://password@example.com:443#Remote%20Node",
+      { headers: { "content-disposition": "attachment;filename*=UTF-8''%E9%A3%9E%E9%B8%9F%E4%BA%91" } },
+    )));
+    try {
+      const response = await workerRequest("/api/utils/remote-source-profile", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: "https://example.com/sub?token=private" }),
+      });
+      const profile = getPath(await jsonObject(response), "data");
+
+      expect(response.status).toBe(200);
+      expect(getPath(profile, "id")).toBe("example-com");
+      expect(getPath(profile, "name")).toBe("飞鸟云");
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("generates source ids when clients omit them", async () => {
+    const payload = JSON.stringify({
+      name: "Auto Generated Source",
+      type: "local",
+      content: "trojan://password@example.com:443#Generated",
+    });
+    const first = await workerRequest("/api/sources", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: payload,
+    });
+
+    expect(first.status).toBe(200);
+    expect(getPath(await jsonObject(first), "data", "id")).toBe("auto-generated-source");
+  });
+
+  it("suffixes generated source ids when the base id exists", async () => {
+    await env.DB.prepare(
+      `INSERT INTO sources (id, name, type, url, content, enabled, filters_json, meta_json, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).bind(
+      "repeated-source",
+      "Existing Source",
+      "local",
+      "",
+      "trojan://password@example.com:443#Existing",
+      1,
+      "[]",
+      "{}",
+      0,
+      0,
+    ).run();
+
+    const response = await workerRequest("/api/sources", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Repeated Source",
+        type: "local",
+        content: "trojan://password@example.com:443#Generated",
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(getPath(await jsonObject(response), "data", "id")).toBe("repeated-source-2");
   });
 
   it("publishes build-time script metadata and executes saved script actions", async () => {
@@ -404,7 +472,7 @@ async function jsonObject(response: Response) {
   return input as Record<string, unknown>;
 }
 
-function getPath(input: Record<string, unknown>, ...path: string[]): unknown {
+function getPath(input: unknown, ...path: string[]): unknown {
   let current: unknown = input;
   for (const key of path) {
     if (!current || typeof current !== "object" || Array.isArray(current)) return undefined;

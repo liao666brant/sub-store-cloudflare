@@ -242,8 +242,7 @@ export default {
         save: "保存"
       },
       editorTabs: {
-        display: "显示",
-        content: "内容",
+        content: "配置",
         actions: "操作"
       },
       pop: {
@@ -335,7 +334,11 @@ export default {
             content: "每行填写一个完整的 http(s) 远程订阅链接。多个链接会按行拉取并合并。\n\n流量信息相关参数:\n\nflowUrl: 自定义查询流量信息的 URL，优先读取响应体，也支持 subscription-userinfo/profile-web-page-url/plan-name 响应头\nflowUserAgent: 查询流量信息时使用的 User-Agent\nflowHeaders: 查询流量信息时使用的请求头，值为 URL 编码后的单行 JSON\nnoFlow: 不查询流量信息\nhideExpire: 隐藏到期时间\nshowRemaining: 显示剩余流量而不是已用流量\n\n远程订阅拉取的 User-Agent 可在本页单独设置；请求超时和并发在「设置」页面配置。\n\n例: https://example.com/sub?token=1#flowUrl=https%3A%2F%2Fexample.com%2Fuserinfo&showRemaining"
           },
           isEmpty: "订阅链接不能为空",
-          isIllegal: "订阅链接格式非法"
+          isIllegal: "订阅链接格式非法",
+          autoProfile: {
+            completed: "已自动填充订阅名称",
+            failed: "无法读取订阅信息，请手动填写订阅名称"
+          }
         },
         subscriptions: {
           label: "包含的订阅源",

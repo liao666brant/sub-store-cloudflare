@@ -242,8 +242,7 @@ export default {
         save: "Save"
       },
       editorTabs: {
-        display: "Display",
-        content: "Content",
+        content: "Configuration",
         actions: "Actions"
       },
       pop: {
@@ -335,7 +334,11 @@ export default {
             content: "Put one full http(s) remote subscription URL on each line. Multiple lines are fetched and merged.\n\nUsage info parameters:\n\nflowUrl: custom URL for subscription usage info; reads the response body or subscription-userinfo/profile-web-page-url/plan-name response headers\nflowUserAgent: User-Agent for usage info requests\nflowHeaders: request headers for usage info requests, as a URL-encoded one-line JSON string\nnoFlow: skip usage info\nhideExpire: hide expiration time\nshowRemaining: show remaining traffic instead of used traffic\n\nThe remote subscription User-Agent can be set on this page. Timeout and concurrency are configured on the Settings page.\n\nExample: https://example.com/sub?token=1#flowUrl=https%3A%2F%2Fexample.com%2Fuserinfo&showRemaining"
           },
           isEmpty: "URL cannot be empty",
-          isIllegal: "Invalid URL"
+          isIllegal: "Invalid URL",
+          autoProfile: {
+            completed: "Subscription name was filled automatically",
+            failed: "Subscription metadata could not be read. Enter the subscription name manually."
+          }
         },
         subscriptions: {
           label: "Included sources",

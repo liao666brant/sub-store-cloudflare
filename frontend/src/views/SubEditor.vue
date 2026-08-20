@@ -28,7 +28,7 @@
       class="form-block-wrapper"
     >
       <div
-        v-if="appearanceSetting.isShowIcon && (!editorTabsEnabled || activeEditorTab === 'display')"
+        v-if="appearanceSetting.isShowIcon && (!editorTabsEnabled || activeEditorTab === 'content')"
         class="sticky-title-icon-container"
       >
         <nut-image
@@ -42,7 +42,8 @@
         <p>{{ $t(`editorPage.subConfig.basic.label`) }}</p>
       </div> -->
       <nut-form class="form" :model-value="form" ref="ruleForm">
-        <div v-show="!editorTabsEnabled || activeEditorTab === 'display'" class="editor-tab-content">
+        <div v-show="!editorTabsEnabled || activeEditorTab === 'content'" class="editor-tab-content">
+        <template v-if="editType !== 'subs'">
         <!-- name -->
         <nut-form-item
           required
@@ -147,6 +148,7 @@
             <nut-switch v-model="form.isIconColor" />
           </div>
         </nut-form-item>
+        </template>
         </div>
         <div v-show="!editorTabsEnabled || activeEditorTab === 'content'" class="editor-tab-content">
         <template v-if="editType === 'subs'">
@@ -196,7 +198,7 @@
             </template>
             <nut-textarea
               class="textarea-wrapper"
-              @blur="customerBlurValidate('url')"
+              @blur="handleRemoteUrlBlur"
               @change="strTrim('url')"
               v-model="form.url"
               :autosize="{ maxHeight: 110, minHeight: 50 }"
@@ -258,6 +260,72 @@
             </div>
             <div style="margin-left: -15px; margin-right: -15px;max-height: 60vh;overflow: auto;">
               <cmView :isReadOnly="false" id="SubEditer"/>
+            </div>
+          </nut-form-item>
+          <nut-form-item
+            :label="$t(`editorPage.subConfig.basic.displayName.label`)"
+            prop="displayName"
+          >
+            <input
+              class="nut-input-text"
+              data-1p-ignore
+              v-model.trim="form.displayName"
+              :placeholder="$t(`editorPage.subConfig.basic.displayName.placeholder`)"
+              type="text"
+            />
+          </nut-form-item>
+          <nut-form-item
+            :label="$t(`editorPage.subConfig.basic.remark.label`)"
+            prop="remark"
+          >
+            <nut-textarea
+              class="nut-input-text"
+              :border="false"
+              v-model="form.remark"
+              :placeholder="$t(`editorPage.subConfig.basic.remark.placeholder`)"
+              type="text"
+              input-align="right"
+              rows="1"
+              :autosize="{ maxHeight: 140 }"
+              max-length="100"
+            />
+          </nut-form-item>
+          <nut-form-item
+            :label="$t(`editorPage.subConfig.basic.tag.label`)"
+            prop="tag"
+          >
+            <nut-input
+              class="nut-input-text"
+              v-model.trim="form.tag"
+              :border="false"
+              :placeholder="$t(`editorPage.subConfig.basic.tag.placeholder`)"
+              type="text"
+              input-align="right"
+              right-icon="rect-right"
+              @click-right-icon="showTagPopup"
+            >
+            </nut-input>
+          </nut-form-item>
+          <nut-form-item
+            :label="$t(`editorPage.subConfig.basic.icon.label`)"
+            prop="icon"
+          >
+            <nut-input
+              :border="false"
+              class="nut-input-text"
+              v-model.trim="form.icon"
+              :placeholder="$t(`editorPage.subConfig.basic.icon.placeholder`)"
+              type="text"
+              input-align="right"
+            />
+          </nut-form-item>
+          <nut-form-item
+            :label="$t(`editorPage.subConfig.basic.isIconColor.label`)"
+            prop="isIconColor"
+            class="ignore-failed-wrapper"
+          >
+            <div class="switch-wrapper">
+              <nut-switch v-model="form.isIconColor" />
             </div>
           </nut-form-item>
           <!-- ua -->
@@ -610,15 +678,15 @@ const editorTabsEnabled = computed(() => {
   if (editorGroupingMode.value === "disabled") return false;
   return true;
 });
-const SUB_EDITOR_TABS = ["display", "content", "actions"] as const;
+const SUB_EDITOR_TABS = ["content", "actions"] as const;
 type SubEditorTab = (typeof SUB_EDITOR_TABS)[number];
 const SUB_EDITOR_PROP_TO_TAB: Partial<Record<string, SubEditorTab>> = {
-  name: "display",
-  displayName: "display",
-  remark: "display",
-  tag: "display",
-  icon: "display",
-  isIconColor: "display",
+  name: "content",
+  displayName: "content",
+  remark: "content",
+  tag: "content",
+  icon: "content",
+  isIconColor: "content",
   source: "content",
   url: "content",
   content: "content",
@@ -632,7 +700,7 @@ const getSubEditorActiveTab = (
   path: string,
   tabs: readonly (typeof SUB_EDITOR_TABS)[number][],
 ) => {
-  const defaultTab = tabs[0] || "display";
+  const defaultTab = tabs[0] || "content";
 
   if (!isEditMode.value) {
     return defaultTab;
@@ -647,7 +715,7 @@ const getSubEditorActiveTab = (
 };
 const activeEditorTab = ref(getSubEditorActiveTab(route.path, availableEditorTabs.value));
 const isSubFormTabActive = computed(() => {
-  return !editorTabsEnabled.value || ["display", "content"].includes(activeEditorTab.value);
+  return !editorTabsEnabled.value || activeEditorTab.value === "content";
 });
 watch(
   [() => route.path, availableEditorTabs, isEditMode],
@@ -873,6 +941,11 @@ const localPreviewSummary = ref<{
   detail?: string;
   types?: Record<string, number>;
 } | null>(null);
+type RemoteSourceProfile = {
+  readonly id: string;
+  readonly name: string;
+};
+const remoteSourceProfileUrl = ref("");
 const form = reactive<any>({
   name: "",
   displayName: "",
@@ -1398,6 +1471,32 @@ const urlValidator = (val: string): Promise<boolean> => {
       resolve(/^(http|https):\/\/\S+$/.test(val));
     }
   });
+};
+
+const isRemoteSourceProfile = (value: unknown): value is RemoteSourceProfile => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return typeof Reflect.get(value, "id") === "string" && typeof Reflect.get(value, "name") === "string";
+};
+
+const handleRemoteUrlBlur = async () => {
+  customerBlurValidate("url");
+  const url = String(form.url || "").trim();
+  if (isEditMode.value || form.source !== "remote" || remoteSourceProfileUrl.value === url || !/^https?:\/\/\S+$/i.test(url)) return;
+
+  try {
+    const response = await cloudflareApi.getRemoteSourceProfile(url);
+    if (response.data.status !== "success" || !isRemoteSourceProfile(response.data.data)) return;
+    remoteSourceProfileUrl.value = url;
+    const shouldFillDisplayName = !form.displayName;
+    if (shouldFillDisplayName) form.displayName = response.data.data.name;
+    if (shouldFillDisplayName) Toast.text(t("editorPage.subConfig.basic.url.autoProfile.completed"));
+  } catch (error) {
+    if (error instanceof Error) {
+      Toast.text(t("editorPage.subConfig.basic.url.autoProfile.failed"));
+      return;
+    }
+    throw error;
+  }
 };
 
   // 失去焦点触发验证

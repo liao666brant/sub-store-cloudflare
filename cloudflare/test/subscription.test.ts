@@ -4,7 +4,7 @@ import {
   MAX_REMOTE_SOURCE_URLS,
 } from "../src/lib/limits";
 import { readResponseText } from "../src/lib/read";
-import { buildSubscription, buildSubscriptionResult, convertSubscriptionContent, normalizeTargetAlias, validateSubscriptionContent } from "../src/lib/subscription";
+import { buildSubscription, buildSubscriptionResult, convertSubscriptionContent, inspectRemoteSubscription, normalizeTargetAlias, validateSubscriptionContent } from "../src/lib/subscription";
 
 describe("subscription parsing and limits", () => {
   afterEach(() => vi.restoreAllMocks());
@@ -91,6 +91,23 @@ describe("subscription parsing and limits", () => {
     const cached = await buildSubscriptionResult(options);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(cached.metadata.cacheStatus).toBe("hit");
+  });
+
+  it("bypasses cached metadata when inspecting a remote source profile", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementationOnce(() => Promise.resolve(new Response(
+      "trojan://password@example.com:443#First",
+      { headers: { "content-disposition": "attachment; filename=First" } },
+    ))).mockImplementationOnce(() => Promise.resolve(new Response(
+      "trojan://password@example.com:443#Second",
+      { headers: { "content-disposition": "attachment; filename=Second" } },
+    )));
+
+    const first = await inspectRemoteSubscription("https://inspect-cache.example/sub", { remoteCacheTtl: 300 });
+    const second = await inspectRemoteSubscription("https://inspect-cache.example/sub", { remoteCacheTtl: 300 });
+
+    expect(first.contentDisposition).toContain("First");
+    expect(second.contentDisposition).toContain("Second");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("renders a JSON target from a local source", async () => {
