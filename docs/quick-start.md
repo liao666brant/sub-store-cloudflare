@@ -34,7 +34,7 @@ pnpm run tokens:generate
 
 ## 第二步：部署到 Cloudflare
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/realchendahuang/sub-store-cloudflare)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/liao666brant/sub-store-cloudflare)
 
 在 Cloudflare 部署页确认：
 

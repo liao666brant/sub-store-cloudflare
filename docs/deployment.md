@@ -15,7 +15,7 @@
 README 顶部的按钮：
 
 ```md
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/realchendahuang/sub-store-cloudflare)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/liao666brant/sub-store-cloudflare)
 ```
 
 Cloudflare 会读取根目录 [../wrangler.jsonc](../wrangler.jsonc)，自动 provision D1，并用根目录 `package.json` 的 `build` / `deploy` 脚本构建部署。

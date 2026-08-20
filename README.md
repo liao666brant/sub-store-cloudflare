@@ -1,16 +1,24 @@
-# Sub-Store Cloudflare
+# Sub-Store Cloudflare（Fork / 二次开发）
 
-[![Release](https://img.shields.io/github/v/release/realchendahuang/sub-store-cloudflare?include_prereleases&sort=semver)](https://github.com/realchendahuang/sub-store-cloudflare/releases)
-[![License: AGPL-3.0](https://img.shields.io/github/license/realchendahuang/sub-store-cloudflare)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/liao666brant/sub-store-cloudflare?include_prereleases&sort=semver)](https://github.com/liao666brant/sub-store-cloudflare/releases)
+[![License: AGPL-3.0](https://img.shields.io/github/license/liao666brant/sub-store-cloudflare)](LICENSE)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/workers/)
 [![D1](https://img.shields.io/badge/Storage-D1-F38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/d1/)
 [![Workers Free](https://img.shields.io/badge/Designed_for-Workers_Free-2F7DFF)](docs/upstream-compatibility.md)
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/realchendahuang/sub-store-cloudflare)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/liao666brant/sub-store-cloudflare)
 
 把机场订阅、自建节点、节点处理和分流模板放到你自己的 Cloudflare Worker 中，最终只给客户端一个订阅链接。
 
 项目采用 Workers Static Assets + Worker API + D1 + Worker Secrets，按 Cloudflare 免费版边界设计并验证。无需自建服务器，也不需要 KV、R2、Durable Objects、Queues 或 Cron。
+
+## Fork 开发说明
+
+本仓库基于 [realchendahuang/sub-store-cloudflare](https://github.com/realchendahuang/sub-store-cloudflare) Fork，用于自用二次开发。Release 信息与 Deploy to Cloudflare 按钮均指向当前仓库，避免误部署到上游版本。
+
+- 开发与部署请以当前仓库的代码、配置和文档为准。
+- 在公开发布前，请确认 `package.json` 的项目名称、版本策略和本 README 的说明仍符合当前改造目标。
+- 需要同步上游时，先审查差异，再按本仓库的产品边界选择性合并；不要直接覆盖本地的 Cloudflare 配置或私有部署文件。
 
 English: [README.en.md](README.en.md)
 
@@ -65,7 +73,7 @@ node -e "const{randomBytes:r}=require('node:crypto');console.log(r(32).toString(
 需要 Git、Node.js 22+ 和 Corepack：
 
 ```bash
-git clone https://github.com/realchendahuang/sub-store-cloudflare.git
+git clone https://github.com/liao666brant/sub-store-cloudflare.git
 cd sub-store-cloudflare
 corepack enable
 pnpm run install:cloudflare
