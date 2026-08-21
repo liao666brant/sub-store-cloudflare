@@ -1,184 +1,177 @@
 <template>
-  <div class="tab-panel-wrapper">
-    <nut-tabs v-model="currentTab" type="smile" class="auto-tab-panel">
-      <nut-tabpane :title="$t('comparePage.nodeInfo.node.title')">
-        <ul class="info-ul">
+  <TDrawer
+    :visible="visible"
+    :header="t('comparePage.nodeInfo.node.title')"
+    size="420px"
+    placement="right"
+    :close-btn="true"
+    :footer="false"
+    destroy-on-close
+    @close="closePanel"
+  >
+    <TTabs v-model="currentTab" size="medium">
+      <TTabPanel value="node" :label="t('comparePage.nodeInfo.node.title')">
+        <ul class="info-list">
           <li>
             <strong class="node-name">
-              <nut-tag class="type-tag">{{ props.nodeInfo.type }} </nut-tag
-              >{{ props.nodeInfo.name }}</strong
-            >
+              <TTag theme="primary" variant="outline">{{ nodeInfo.type }}</TTag>
+              {{ nodeInfo.name }}
+            </strong>
           </li>
           <li v-for="(value, key) in displayNodeInfo" :key="key">
-            <span class="info-key">{{ key }}</span>
-            <span class="info-value"> : </span>
-            <span class="info-value">{{ value }}</span>
+            <span>{{ key }}</span>
+            <span class="value">{{ formatValue(value) }}</span>
           </li>
         </ul>
-      </nut-tabpane>
-      <nut-tabpane title="JSON">
-        <div class="input-wrapper">
-          <nut-textarea :model-value="JSON.stringify(props.nodeInfo, null, 2)" :rows="15" readonly/>
+      </TTabPanel>
+      <TTabPanel value="json" label="JSON">
+        <TTextarea
+          :model-value="JSON.stringify(nodeInfo, null, 2)"
+          readonly
+          :autosize="{ minRows: 15, maxRows: 20 }"
+        />
+      </TTabPanel>
+      <TTabPanel value="ip" :label="t('comparePage.nodeInfo.ipApi.title')">
+        <TLoading
+          v-if="ipLoading"
+          class="ip-state"
+          :text="t('comparePage.nodeInfo.ipApi.loading')"
+        />
+        <div v-else-if="ipError" class="ip-state">
+          <p>{{ t('comparePage.nodeInfo.ipApi.loadFailed') }}</p>
+          <p class="ip-error-detail">{{ ipError }}</p>
+          <TButton size="small" variant="outline" theme="primary" @click="loadIpInfo">
+            {{ t('comparePage.nodeInfo.ipApi.retry') }}
+          </TButton>
         </div>
-      </nut-tabpane>
-      <nut-tabpane :title="$t('comparePage.nodeInfo.ipApi.title')">
-        <div v-if="ipLoading" class="ip-api-state ip-api-loading">{{ $t('comparePage.nodeInfo.ipApi.loading') }}</div>
-        <div v-else-if="ipError" class="ip-api-state">
-          <span class="state-title">{{ $t('comparePage.nodeInfo.ipApi.loadFailed') }}</span>
-          <nut-button class="ip-api-retry-btn" plain type="primary" size="small" @click="loadIpInfo">{{ $t('comparePage.nodeInfo.ipApi.retry') }}</nut-button>
-        </div>
-        <ul v-else class="info-ul">
+        <ul v-else class="info-list">
           <li v-for="(value, key) in ipInfo" :key="key">
-            <span class="info-key">{{ key }}</span>
-            <span class="info-value"> : {{ typeof value === 'object' ? JSON.stringify(value) : value }}</span>
+            <span>{{ key }}</span>
+            <span class="value">{{ formatValue(value) }}</span>
           </li>
         </ul>
-      </nut-tabpane>
-    </nut-tabs>
-  </div>
-  <!-- lock-scroll -->
-  <nut-overlay
-    v-model:visible="overlayVisible"
-    :z-index="1001"
-    @click="closePanel"
-  ></nut-overlay>
+      </TTabPanel>
+    </TTabs>
+  </TDrawer>
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref } from 'vue';
-  import { useCloudflareApi } from '@/api/app';
+import {
+  Button as TButton,
+  Drawer as TDrawer,
+  Loading as TLoading,
+  TabPanel as TTabPanel,
+  Tabs as TTabs,
+  Tag as TTag,
+  Textarea as TTextarea,
+} from "tdesign-vue-next";
+import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { useCloudflareApi } from "@/api/app";
+import type { CompareNode } from "@/components/compare/types";
 
-  const emit = defineEmits(['close']);
-  const props = defineProps<{
-    nodeInfo: NodeInfo;
-  }>();
+type NodeRecord = Record<string, unknown>;
 
-  const overlayVisible = ref(true);
-  const currentTab = ref(0);
-  const ipLoading = ref(false);
-  const ipError = ref(false);
-  const ipInfo = ref<Record<string, unknown>>({});
-  const api = useCloudflareApi();
+const props = defineProps<{ readonly nodeInfo: CompareNode }>();
+const emit = defineEmits<{ readonly close: [] }>();
+const { t } = useI18n();
+const api = useCloudflareApi();
+const visible = ref(true);
+const currentTab = ref("node");
+const ipLoading = ref(false);
+const ipError = ref("");
+const ipInfo = ref<NodeRecord>({});
 
-  const loadIpInfo = async () => {
-    ipLoading.value = true;
-    ipError.value = false;
-    try {
-      const response = await api.getNodeInfo({ server: props.nodeInfo.server });
-      ipInfo.value = (response?.data as any)?.data || {};
-    } catch {
-      ipError.value = true;
-    } finally {
-      ipLoading.value = false;
-    }
-  };
+const displayNodeInfo = computed<NodeRecord>(() => {
+  const hiddenKeys = ["id", "type", "name"];
+  return Object.fromEntries(
+    Object.entries(props.nodeInfo).filter(([key]) => !hiddenKeys.includes(key)),
+  );
+});
 
-  const displayNodeInfo = computed(() => {
-    const result = {};
-    Object.keys(props.nodeInfo).forEach(key => {
-      switch (key) {
-        case 'id':
-        case 'type':
-        case 'name':
-          break;
-        default:
-          result[key] = props.nodeInfo[key];
-          break;
-      }
-    });
-    return result;
-  });
+const formatValue = (value: unknown): string => {
+  if (value && typeof value === "object") return JSON.stringify(value, null, 2);
+  return String(value ?? "");
+};
 
-  const closePanel = () => {
-    emit('close');
-  };
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
 
-  onMounted(loadIpInfo);
+const loadIpInfo = async (): Promise<void> => {
+  ipLoading.value = true;
+  ipError.value = "";
+
+  try {
+    const response = await api.getNodeInfo({ server: String(props.nodeInfo.server ?? "") });
+    if (response.data.status !== "success") throw new Error(response.data.error.message);
+    ipInfo.value = response.data.data ?? {};
+  } catch (error: unknown) {
+    ipError.value = errorMessage(error);
+  } finally {
+    ipLoading.value = false;
+  }
+};
+
+const closePanel = (): void => {
+  visible.value = false;
+  emit("close");
+};
+
+onMounted(() => {
+  void loadIpInfo();
+});
 </script>
 
 <style lang="scss" scoped>
-  .type-tag {
-    color: var(--primary-color) !important;
-    border: 1px solid var(--primary-color) !important;
-    background: transparent !important;
-    margin-right: 4px;
-  }
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-control);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--td-text-color-secondary);
+}
 
-  .node-name {
-    font-size: 14px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-  }
+.info-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--app-space-compact);
+  overflow-wrap: anywhere;
+}
 
-  .info-ul {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
+.info-list li:first-child {
+  display: block;
+  color: var(--td-text-color-primary);
+}
 
-    li:first-child {
-      margin-bottom: 20px;
-    }
+.node-name {
+  display: flex;
+  align-items: start;
+  gap: var(--app-space-compact);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 
-    li:not(:first-child) {
-      margin-bottom: 8px;
-      color: var(--comment-text-color);
-    }
-  }
+.value {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
-  .ip-api-state {
-    min-height: 220px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0 20px;
-    text-align: center;
-  }
+.ip-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-standard);
+  min-height: 220px;
+  color: var(--td-text-color-secondary);
+  text-align: center;
+}
 
-  .ip-api-loading {
-    color: var(--comment-text-color);
-  }
-
-  .state-title {
-    margin-top: 16px;
-    color: var(--comment-text-color);
-  }
-
-  .ip-api-empty {
-    padding: 16px 0 8px;
-  }
-
-  .ip-api-retry-btn {
-    margin-top: 8px;
-  }
-
-  .input-wrapper {
-    display: flex;
-    align-items: center;
-
-    >view.nut-textarea {
-      background: transparent;
-      padding: 8px 12px;
-      // border-bottom: 1px solid;
-      color: var(--second-text-color);
-      border-color: var(--lowest-text-color);
-
-      :deep(textarea) {
-        color: inherit;
-      }
-    }
-  }
-
-  .qrcode {
-    width: 92px;
-    height: 92px;
-    margin: 0 auto;
-    opacity: 0.8;
-  }
+.ip-error-detail {
+  max-width: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 </style>

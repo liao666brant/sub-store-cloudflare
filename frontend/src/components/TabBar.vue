@@ -1,81 +1,59 @@
 <template>
-  <div class="tab-bar-wrapper" :class="{ 'is-wide-screen-visible': isWideScreenNarrowModeActive }">
-    <nut-tabbar
-      unactive-color=""
-      v-model:visible="activeTab"
-      :bottom="true"
-      class="tabbar"
-      size="22px"
-    >
-      <nut-tabbar-item class="tabbar-item" to="/subs" icon="link" :tab-title="t('tabBar.sub')" />
-      <nut-tabbar-item class="tabbar-item" to="/tools" icon="category" :tab-title="t('tabBar.tools')" />
-      <nut-tabbar-item class="tabbar-item" to="/my" icon="setting" :tab-title="t('tabBar.my')" />
-    </nut-tabbar>
-  </div>
+  <nav class="tab-bar-wrapper" :aria-label="t('navBar.pagesTitle.sub')">
+    <THeadMenu v-model="activeRoute" class="tab-bar-wrapper__menu">
+      <TMenuItem value="/subs" to="/subs" router-link>
+        <template #icon><LinkIcon /></template>
+        {{ t("tabBar.sub") }}
+      </TMenuItem>
+      <TMenuItem value="/tools" to="/tools" router-link>
+        <template #icon><ToolsIcon /></template>
+        {{ t("tabBar.tools") }}
+      </TMenuItem>
+      <TMenuItem value="/my" to="/my" router-link>
+        <template #icon><SettingIcon /></template>
+        {{ t("tabBar.my") }}
+      </TMenuItem>
+    </THeadMenu>
+  </nav>
 </template>
 
-<script lang="ts" setup>
-  import { useWideScreenNarrowMode } from '@/hooks/useWideScreenNarrowMode';
-  import { ref } from 'vue';
-  import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-  import { useI18n } from 'vue-i18n';
+<script setup lang="ts">
+import { LinkIcon, SettingIcon, ToolsIcon } from "tdesign-icons-vue-next";
+import { HeadMenu as THeadMenu, MenuItem as TMenuItem } from "tdesign-vue-next";
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
 
-  const route = useRoute();
-  const { t } = useI18n();
-  const routeList = ['/subs', '/tools', '/my'];
-  const activeTab = ref(routeList.indexOf(route.path));
-  const { isWideScreenNarrowModeActive } = useWideScreenNarrowMode();
-
-  const style = {
-    height: 'calc(56px + env(safe-area-inset-bottom))',
-    paddingBottom: 'env(safe-area-inset-bottom)',
-  };
-  onBeforeRouteUpdate((to, from, next) => {
-    activeTab.value = routeList.indexOf(to.path);
-    // const scrollTop = document.documentElement.scrollTop || document.body.scrollTop
-    // globalStore.setSavedPositions(from.path, { left: 0, top: scrollTop })
-    next();
-  });
+const route = useRoute();
+const { t } = useI18n();
+const routeList = ["/subs", "/tools", "/my"] as const;
+const activeRoute = computed(() => routeList.find(path => route.path === path) ?? "");
 </script>
 
-<style lang="scss" scoped>
-  .tab-bar-wrapper {
-    z-index: 101;
-    bottom: 0;
-    @include centered-fixed-container;
+<style scoped lang="scss">
+.tab-bar-wrapper {
+  position: fixed;
+  z-index: 101;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--td-bg-color-container, var(--tab-bar-color));
+  border-top: 1px solid var(--td-component-stroke, var(--divider-color));
+}
 
-    @media screen and (min-width: 768px) {
-      display: none !important;
-    }
+.tab-bar-wrapper__menu {
+  justify-content: center;
+  min-height: 56px;
+  background: transparent;
+}
 
-    &.is-wide-screen-visible {
-      @media screen and (min-width: 768px) {
-        display: block !important;
-      }
-    }
+:deep(.t-head-menu__inner) {
+  justify-content: space-evenly;
+}
 
-    .tabbar {
-      padding-top: 8px;
-      padding-bottom: v-bind('style.paddingBottom');
-      box-shadow: none;
-      backdrop-filter: blur(var(--tab-bar-blur));
-      -webkit-backdrop-filter: blur(var(--tab-bar-blur));
-      background: var(--tab-bar-color);
-      @media screen and (min-width: 768px) {
-        border-radius: var(--item-card-radios);
-        overflow: hidden;
-      }
-    }
-
-    :deep(.tabbar-item) {
-      cursor: pointer;
-      &.nut-tabbar-item__icon--unactive {
-        color: var(--lowest-text-color);
-      }
-      & > .nut-tabbar-item_icon-box > .nut-tabbar-item_icon-box_nav-word {
-        margin-top: 8px;
-        font-weight: 600;
-      }
-    }
-  }
+:deep(.t-menu__item) {
+  flex: 1;
+  justify-content: center;
+}
 </style>

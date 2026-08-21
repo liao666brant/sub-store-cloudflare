@@ -716,6 +716,15 @@ export default {
       storage: "Storage",
       version: "Version"
     },
+    theme: {
+      title: "Theme",
+      mode: "Theme mode",
+      auto: "Follow system",
+      manual: "Manual",
+      light: "Light theme",
+      dark: "Dark theme",
+      theme: "Theme"
+    },
     backup: {
       title: "Backup and Restore",
       desc: "Export and restore sources, collections, rule templates, and request settings.",
@@ -730,6 +739,7 @@ export default {
       create: "New",
       builtIn: "Built-in",
       custom: "Custom",
+      empty: "No rule templates available",
       editTitle: "Edit rule template",
       importTitle: "Import rule template",
       idPlaceholder: "Template ID, e.g. custom-mihomo",
@@ -740,9 +750,12 @@ export default {
       validationRequired: "Template ID and content are required",
       saveSucceed: "Template saved",
       saveFailed: "Failed to save template\n{e}",
+      loadFailed: "Failed to load templates\n{e}",
+      importFailed: "Failed to import template file\n{e}",
       deleteTitle: "Delete template",
       deleteContent: "Delete template {name}?",
-      deleteSucceed: "Template deleted"
+      deleteSucceed: "Template deleted",
+      deleteFailed: "Failed to delete template\n{e}"
     },
     request: {
       title: "Request Settings",
@@ -836,6 +849,19 @@ export default {
     copiedLength: "Copied characters: {count}",
     cleared: "Cleared",
     pastedLength: "Pasted characters: {count}",
-    clipboardFailed: "Failed to read clipboard: available on localhost/HTTPS or after granting permission"
+    clipboardFailed: "Failed to read clipboard: available on localhost/HTTPS or after granting permission",
+    toolbar: {
+      label: "Code editor actions",
+      highlight: "Toggle JavaScript highlighting",
+      undo: "Undo",
+      redo: "Redo",
+      format: "Format code",
+      search: "Search code",
+      copy: "Copy code",
+      clear: "Clear code",
+      paste: "Paste code",
+      collapse: "Collapse editor toolbar",
+      expand: "Expand editor toolbar"
+    }
   }
 };

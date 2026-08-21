@@ -1,0 +1,22 @@
+.add-actions {
+  margin-top: var(--app-space-standard);
+}
+.add-actions > div,
+.add-actions__buttons {
+  align-items: center;
+  display: flex;
+  gap: var(--app-space-compact);
+}
+.add-actions > div {
+  justify-content: space-between;
+}
+.add-actions__buttons {
+  flex-wrap: wrap;
+  margin-top: var(--app-space-standard);
+}
+@media (max-width: 479px) {
+  .add-actions__buttons :deep(.t-button) {
+    min-inline-size: 0;
+    white-space: normal;
+  }
+}

@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ConfigEnv, defineConfig, loadEnv } from "vite";
-import { createStyleImportPlugin } from "vite-plugin-style-import";
-import { createSvgIconsPlugin } from "vite-plugin-svg-icons";
+import { TDesignResolver } from "@tdesign-vue-next/auto-import-resolver";
+import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
 
 const projectRoot = dirname(fileURLToPath(import.meta.url));
 const version = JSON.parse(
@@ -32,26 +33,13 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
     plugins: [
       htmlPlugin(),
       vue(),
-      createStyleImportPlugin({
-        // resolves: [NutuiResolve()],
-        libs: [
-          {
-            libraryName: "@nutui/nutui",
-            esModule: true,
-            resolveStyle: (name) => {
-              name = name.toLowerCase().replace("-", ""); // NutuiResolve官方版目前在linux会造成大小写不一致问题无法加载资源
-              if (name === "icon") {
-                return "";
-              }
-              return `@nutui/nutui/dist/packages/${name}/index.scss`;
-            },
-          },
-        ],
+      AutoImport({
+        dts: false,
+        resolvers: [TDesignResolver({ library: "vue-next" })],
       }),
-      createSvgIconsPlugin({
-        iconDirs: [resolve(projectRoot, "src/assets/icons")],
-        symbolId: "icon-[dir]-[name]",
-        customDomId: "__svg__icons__dom__",
+      Components({
+        dts: false,
+        resolvers: [TDesignResolver({ library: "vue-next" })],
       }),
     ],
     root: projectRoot,
@@ -74,6 +62,7 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
       },
       rollupOptions: {
         output: {
+          onlyExplicitManualChunks: true,
           entryFileNames: "[name].js",
           chunkFileNames: "chunks/[name]-[hash].js",
           assetFileNames: (assetInfo) => {
@@ -85,7 +74,8 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
           },
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('@nutui/nutui') || (id.includes('@nutui') && !id.includes('@nutui/icons'))) return 'nutui';
+              if (id.includes('tdesign-icons-vue-next')) return 'tdesign';
+              if (id.includes('tdesign-vue-next')) return 'tdesign';
               if (
                 id.includes('/codemirror/') ||
                 id.includes('@codemirror/') ||
@@ -94,7 +84,6 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
                 id.includes('js-beautify')
               ) return 'editor';
               if (id.includes('vue-i18n') || id.includes('@intlify/')) return 'i18n';
-              if (id.includes('@fortawesome/')) return 'icons';
               if (id.includes('/vue/') || id.includes('/vue-router/') || id.includes('/pinia/') || id.includes('@vue/') || id.includes('@vueuse/')) return 'vue-vendor';
             }
           },
@@ -110,9 +99,7 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
     css: {
       preprocessorOptions: {
         scss: {
-          // 配置 自定义覆盖主题 和 nutui 全局 scss 变量
-          additionalData: `@import "@/assets/styles/custom_variables.scss";@import "@nutui/nutui/dist/styles/variables-jdt.scss";@import '@/assets/styles/mixins.scss';`,
-          // NutUI 3 still ships legacy @import syntax; Vite 6 already uses Sass's modern API.
+          additionalData: `@import "@/assets/styles/custom_variables.scss";@import '@/assets/styles/mixins.scss';`,
           silenceDeprecations: ["import"],
         },
       },

@@ -5,27 +5,25 @@
   <TabBar v-if="shouldShowTabBar" />
 </template>
 
-<script lang="ts" setup>
-  import TabBar from '@/components/TabBar.vue';
-  import { computed } from 'vue';
-  import { useWideScreenNarrowMode } from '@/hooks/useWideScreenNarrowMode';
+<script setup lang="ts">
+import TabBar from "@/components/TabBar.vue";
+import { useWideScreenNarrowMode } from "@/hooks/useWideScreenNarrowMode";
 
-  const { shouldShowTabBar } = useWideScreenNarrowMode();
-
-  const height = computed(() => {
-    if (shouldShowTabBar.value) {
-      return 'calc(56px + env(safe-area-inset-bottom))';
-    } else {
-      return '16px';
-    }
-  });
+const { shouldShowTabBar } = useWideScreenNarrowMode();
 </script>
 
 <style scoped lang="scss">
-  .app-layout-wrapper {
-    flex: 1;
-    padding: 56px 0 v-bind(height) 0;
-    overflow: auto;
-  }
+.app-layout-wrapper {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 0;
+  overflow: auto;
+  overscroll-behavior: contain;
 
+  @media screen and (max-width: 767px) {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+}
 </style>

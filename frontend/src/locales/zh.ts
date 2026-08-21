@@ -716,6 +716,15 @@ export default {
       storage: "存储",
       version: "版本"
     },
+    theme: {
+      title: "主题",
+      mode: "主题模式",
+      auto: "跟随系统",
+      manual: "手动选择",
+      light: "浅色主题",
+      dark: "深色主题",
+      theme: "主题"
+    },
     backup: {
       title: "备份与恢复",
       desc: "导出和恢复订阅源、组合订阅、规则模板与请求设置。",
@@ -730,6 +739,7 @@ export default {
       create: "新建",
       builtIn: "内置模板",
       custom: "自定义模板",
+      empty: "暂无可用规则模板",
       editTitle: "编辑规则模板",
       importTitle: "导入规则模板",
       idPlaceholder: "模板 ID，例如 custom-mihomo",
@@ -740,9 +750,12 @@ export default {
       validationRequired: "模板 ID 和内容不能为空",
       saveSucceed: "模板已保存",
       saveFailed: "模板保存失败\n{e}",
+      loadFailed: "加载模板失败\n{e}",
+      importFailed: "导入模板文件失败\n{e}",
       deleteTitle: "删除模板",
       deleteContent: "确认删除模板 {name}？",
-      deleteSucceed: "模板已删除"
+      deleteSucceed: "模板已删除",
+      deleteFailed: "删除模板失败\n{e}"
     },
     request: {
       title: "请求设置",
@@ -796,8 +809,8 @@ export default {
     nodeNames: {
       entry: "全部节点名",
       title: "{side}全部节点名",
-      descriptionBefore: "可复制全部节点名，也可复制提示词让 AI 帮你整理通用命名规则，再按结果配置正则重命名。",
-      aiLink: "建议先保留地区、倍率、协议和入口编号，再用正则重命名统一格式。",
+      descriptionBefore: "可复制全部节点名，\n也可复制提示词让 AI 帮你\n整理通用命名规则，\n再按结果配置正则重命名。",
+      aiLink: "建议先保留地区、倍率、协议和\n入口编号，再用正则重命名统一格式。",
       copyAll: "复制全部节点名",
       copyPrompt: "复制提示词",
       copyAllSucceed: "节点名已复制",
@@ -836,6 +849,19 @@ export default {
     copiedLength: "已复制字符串数: {count}",
     cleared: "已清空",
     pastedLength: "已粘贴字数: {count}",
-    clipboardFailed: "获取剪贴板失败: 本地/HTTPS 环境下可用(或手动配置权限)"
+    clipboardFailed: "获取剪贴板失败: 本地/HTTPS 环境下可用(或手动配置权限)",
+    toolbar: {
+      label: "代码编辑器操作",
+      highlight: "切换 JavaScript 高亮",
+      undo: "撤销",
+      redo: "重做",
+      format: "格式化代码",
+      search: "搜索代码",
+      copy: "复制代码",
+      clear: "清空代码",
+      paste: "粘贴代码",
+      collapse: "收起编辑器工具栏",
+      expand: "展开编辑器工具栏"
+    }
   }
 };

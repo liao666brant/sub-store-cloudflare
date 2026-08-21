@@ -55,4 +55,12 @@ interface StoragePostData {
   content: String;
 }
 
-type CustomTheme = "light" | "dark";
+type CustomTheme =
+  | "dark"
+  | "darkblue"
+  | "light"
+  | "lightblue"
+  | "mocha"
+  | "monokai"
+  | "pureblack"
+  | "sereneblues";

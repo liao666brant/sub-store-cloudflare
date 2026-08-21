@@ -1,0 +1,91 @@
+.settings-card {
+  background: var(--td-bg-color-container);
+}
+
+.settings-card :deep(.t-card__header) {
+  align-items: center;
+}
+
+.card-actions,
+.template-actions,
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-control);
+}
+
+.template-copy {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--app-space-compact);
+  overflow-wrap: anywhere;
+}
+
+.template-copy strong {
+  color: var(--td-text-color-primary);
+}
+
+.template-copy span {
+  color: var(--td-text-color-secondary);
+  font-size: var(--td-font-size-body-small);
+  line-height: 1.5;
+}
+
+.template-actions {
+  flex: 0 0 auto;
+}
+
+.template-form {
+  margin-block-start: var(--app-space-standard);
+}
+
+.template-editor {
+  min-block-size: 18rem;
+  block-size: min(48dvb, 32rem);
+  overflow: auto;
+  border: 1px solid var(--td-component-stroke);
+  border-radius: var(--td-radius-default);
+  background: var(--td-bg-color-page);
+}
+
+.template-editor :deep(.cmviewRef),
+.template-editor :deep(.cm-editor) {
+  min-block-size: 100%;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  margin-block-start: var(--app-space-standard);
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 640px) {
+  .settings-card :deep(.t-card__title) {
+    white-space: nowrap;
+  }
+
+  .card-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .template-actions {
+    inline-size: 100%;
+    justify-content: flex-end;
+  }
+
+  :deep(.template-dialog .t-dialog) {
+    inline-size: calc(100dvi - var(--app-space-inline-safe) * 2);
+    margin: var(--app-space-inline-safe);
+  }
+}

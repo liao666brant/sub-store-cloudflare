@@ -8,7 +8,7 @@ Vue 3 + Vite 管理界面：认证 token 的浏览器侧保存、订阅源与集
 
 ## 入口与启动
 
-- 浏览器入口：`src/main.ts`；启动时从 URL 同步管理 token，注册 Pinia、Vue Router、i18n、NutUI 和全局样式。
+- 浏览器入口：`src/main.ts`；启动时从 URL 同步管理 token，注册 Pinia、Vue Router、i18n、TDesign Vue Next 和全局样式。
 - 根组件：`src/App.vue`；初始化 stores，渲染导航、侧边栏与路由视图。
 - 路由：`src/router/index.ts`；`/subs`、`/my`、`/tools`、`/preview`、`/edit/:editType(subs|collections)/:id` 与兜底 404。
 - 开发与构建：`pnpm --dir frontend run dev`、`pnpm --dir frontend run build`；根构建命令为 `pnpm run build:frontend`。
@@ -21,8 +21,8 @@ Vue 3 + Vite 管理界面：认证 token 的浏览器侧保存、订阅源与集
 
 ## 关键依赖与配置
 
-- Vue 3、Vue Router、Pinia、Vue I18n、Axios、NutUI、CodeMirror 与 Vite。
-- `vite.config.ts` 定义 `@` 别名、Vite 入口、SVG 图标、NutUI 样式导入、手工 chunk 与 `VITE_PUBLIC_PATH`。
+- Vue 3、Vue Router、Pinia、Vue I18n、Axios、TDesign Vue Next、TDesign Icons、CodeMirror 与 Vite。
+- `vite.config.ts` 定义 `@` 别名、Vite 入口、TDesign 自动导入、手工 chunk 与 `VITE_PUBLIC_PATH`。
 - 文案基线是 `src/locales/zh.ts`，英文为 `src/locales/en.ts`；`scripts/check-locales.mjs` 校验键、占位符与静态引用。
 
 ## 数据模型
@@ -34,7 +34,7 @@ Vue 3 + Vite 管理界面：认证 token 的浏览器侧保存、订阅源与集
 
 - `pnpm --dir frontend run check:locales` 校验 locale 覆盖和静态使用。
 - `pnpm --dir frontend run build` 先执行 `vue-tsc --noEmit`，再执行 Vite 生产构建。
-- 当前未发现单独的前端单元测试目录；交互改动至少运行 locale 检查与生产构建。
+- 单元测试位于 `tests/`，浏览器回归位于 `e2e/`；交互改动至少运行 locale 检查、单元测试、生产构建和受影响浏览器场景。
 
 ## 常见问题
 

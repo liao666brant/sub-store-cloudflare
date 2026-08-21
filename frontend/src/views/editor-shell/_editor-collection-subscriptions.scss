@@ -1,0 +1,59 @@
+.include-subs-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px 12px;
+
+  .tag-check { flex: 1; min-width: 0; }
+  .radio-wrapper {
+    display: flex;
+    justify-content: flex-start;
+
+    .tag { margin: 0 5px 0 0; padding: 7.5px 2.5px 4px; border-bottom: 1px solid transparent; color: var(--second-text-color); cursor: pointer; font-size: 12px; user-select: none; }
+    .current { border-bottom-color: var(--primary-color); color: var(--primary-color); }
+  }
+
+  :deep(.t-form__label) { width: 100%; font-size: 12px; }
+  .subs-checkbox-wrapper {
+    flex-direction: row-reverse;
+
+    &.is-dragging .subs-checkbox,
+    &.is-dragging .sub-img-wrapper,
+    &.is-dragging .sub-img-wrapper * { user-select: none; }
+
+    &.is-simple-mode .subs-checkbox {
+      padding: 10px 0 0;
+
+      &:not(:last-child) { padding: 10px 0; }
+      .sub-img-wrapper { font-size: 13px; }
+      .icon { margin-right: 6px; }
+      .sub-item { margin: -3px 0 0 -3px; }
+      .sub-item .name,
+      .sub-item .tag { margin: 3px 0 0 3px; }
+      .sub-item-customer-icon { margin-right: 8px; }
+      .drag-handle { padding: 6px; font-size: 14px; }
+    }
+
+    .subs-checkbox {
+      justify-content: space-between;
+      padding: 16px 0 0;
+
+      &:not(:last-child) { padding: 16px 0; border-bottom: 1px solid var(--divider-color); }
+      .sub-img-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        max-width: 100%;
+        color: var(--second-text-color);
+        font-size: 14px;
+      }
+      .icon { margin-right: 8px; }
+      .sub-img-wrapper span { display: -webkit-box; max-width: 56vw; overflow: hidden; word-break: break-all; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+      .sub-item { display: flex; flex-wrap: wrap; align-items: center; margin: -4px 0 0 -4px; }
+      .sub-item .name,
+      .sub-item .tag { margin: 4px 0 0 4px; }
+      .sub-item-customer-icon { margin-right: 12px; }
+      .sub-item-customer-icon :deep(img) { object-fit: contain; filter: brightness(var(--img-brightness)); }
+      .drag-handle { position: absolute; top: 50%; right: 0; padding: 10px; color: var(--second-text-color); font-size: 16px; transform: translateY(-50%); }
+    }
+  }
+}

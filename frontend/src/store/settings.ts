@@ -2,7 +2,7 @@ import { useSettingsApi } from "@/api/settings";
 import i18n from "@/locales";
 import { useAppNotifyStore } from "@/store/appNotify";
 import { runFrontendRequestTask } from "@/utils/requestConcurrency";
-import { Toast } from "@nutui/nutui";
+import { closeLoading, showLoading } from "@/plugin/tdesign";
 import { defineStore } from "pinia";
 // import { useEnvApi } from '@/api/env';
 // import { useSubsStore } from '@/store/subs';
@@ -227,18 +227,21 @@ export const useSettingsStore = defineStore("settingsStore", {
       }
     },
     async changeTheme(data: SettingsPostData) {
-      Toast.loading(t("myPage.notify.save.themeLoading"), { cover: true, id: "theme__loading" });
+      showLoading(t("myPage.notify.save.themeLoading"), { cover: true, id: "theme__loading" });
       const { showNotify } = useAppNotifyStore();
-      const res = await settingsApi.setSettings(data);
-      if (res?.data?.status === "success" && res?.data?.data) {
-        this.theme = res.data.data.theme;
-      } else {
-        showNotify({
-          title: t("myPage.notify.save.themeFailed"),
-          type: "danger",
-        });
+      try {
+        const res = await settingsApi.setSettings(data);
+        if (res?.data?.status === "success" && res?.data?.data) {
+          this.theme = res.data.data.theme;
+        } else {
+          showNotify({
+            title: t("myPage.notify.save.themeFailed"),
+            type: "danger",
+          });
+        }
+      } finally {
+        closeLoading("theme__loading");
       }
-      Toast.hide("theme__loading");
     },
   },
 });

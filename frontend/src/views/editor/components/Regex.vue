@@ -1,312 +1,248 @@
 <template>
-  <div class="editor-action-card">
-    <template v-if="type === 'Regex Filter'">
-      <p class="des-label">
+  <div class="editor-action-card editable-tags-card">
+    <TDialog
+      v-model:visible="leaveDialogVisible"
+      :header="t('editorPage.subConfig.pop.leaveConfirmTitle')"
+      :body="t('editorPage.subConfig.pop.leaveContent')"
+      :cancel-btn="t('editorPage.subConfig.pop.leaveCancel')"
+      :confirm-btn="t('editorPage.subConfig.pop.leaveConfirm')"
+      @cancel="cancelLeave"
+      @close="cancelLeave"
+      @confirm="confirmLeave"
+    />
+    <TDialog
+      v-model:visible="editDialogVisible"
+      :header="t('editorPage.subConfig.pop.clickTag.title')"
+      :body="t('editorPage.subConfig.pop.clickTag.content')"
+      :cancel-btn="t('editorPage.subConfig.pop.clickTag.cancel')"
+      :confirm-btn="t('editorPage.subConfig.pop.clickTag.confirm')"
+      @cancel="cancelEdit"
+      @close="cancelEdit"
+      @confirm="confirmEdit"
+    />
+    <template v-if="hasMode"
+      ><p class="des-label">
         {{ $t(`editorPage.subConfig.nodeActions['${type}'].des[1]`) }}
       </p>
-      <nut-radiogroup direction="horizontal" v-model="mode">
-        <nut-radio v-for="(key, index) in opt[type]" :label="key" :key="index"
+      <TRadioGroup v-model="mode" class="option-grid option-grid--three"
+        ><TRadio
+          v-for="(option, index) in modeOptions"
+          :key="String(option)"
+          :value="option"
           >{{
             $t(`editorPage.subConfig.nodeActions['${type}'].options[${index}]`)
-          }}
-        </nut-radio>
-      </nut-radiogroup>
-    </template>
-    <template v-if="type === 'Regex Sort Operator'">
-      <p class="des-label">
-        {{ $t(`editorPage.subConfig.nodeActions['${type}'].des[1]`) }}
-      </p>
-      <nut-radiogroup direction="horizontal" v-model="mode">
-        <nut-radio v-for="(key, index) in opt[type]" :label="key" :key="index"
-          >{{
-            $t(`editorPage.subConfig.nodeActions['${type}'].options[${index}]`)
-          }}
-        </nut-radio>
-      </nut-radiogroup>
-    </template>
+          }}</TRadio
+        ></TRadioGroup
+      ></template
+    >
     <p class="des-label">
       {{ $t(`editorPage.subConfig.nodeActions['${type}'].des[0]`) }}
     </p>
-    <div class="tag-wrapper">
-      <draggable
-          item-key="id"
-          v-model="dragData"
-          :force-fallback="true"
-          :scroll="true"
-          v-bind="{
-            chosenClass: 'chosentag',
-          }"
-        >
-        <template #item="{ element, index }">
-            <nut-tag
-              @click="onClickTag"
-              class="tag-item"
-              closeable
-              @close="deleteRegexItem(index)"
-            >
-              <span>{{
-                type === 'Regex Rename Operator'
-                  ? `${element.value.expr}  ⇒  ${element.value.now}`
-                  : element.value
-              }}
-              </span>
-            </nut-tag>
-          </template>
-      </draggable>
-    </div>
+    <Draggable
+      v-model="dragData"
+      item-key="id"
+      class="tag-list"
+      :force-fallback="true"
+      :scroll="true"
+      :chosen-class="'chosentag'"
+    >
+      <template #item="{ element, index }"
+        ><div class="tag-list__item">
+          <TButton
+            :aria-label="`Edit regex ${index + 1}`"
+            variant="text"
+            size="small"
+            @click="requestEdit(index)"
+            ><TTag>{{ tagText(element.value) }}</TTag></TButton
+          ><TButton
+            :aria-label="`Delete regex ${index + 1}`"
+            theme="danger"
+            variant="text"
+            shape="circle"
+            size="small"
+            @click="deleteRegexItem(index)"
+            ><CloseIcon
+          /></TButton></div
+      ></template>
+    </Draggable>
     <div class="input-wrapper">
-      <nut-input
-       class="custom-input"
-        label=""
+      <TInput
+        v-model="input1"
         :placeholder="
           $t(`editorPage.subConfig.nodeActions['${type}'].placeholder[0]`)
         "
-        v-model="input1"
-      />
-      <nut-input
-        v-if="type === 'Regex Rename Operator'"
-        label=""
+      /><TInput
+        v-if="isRenameOperator"
+        v-model="input2"
         :placeholder="
           $t(`editorPage.subConfig.nodeActions['${type}'].placeholder[1]`)
         "
-        v-model="input2"
-      />
-      <font-awesome-icon @click="addItem" icon="fa-solid fa-location-arrow" />
+      /><TButton
+        aria-label="Add regex"
+        shape="circle"
+        variant="text"
+        @click="addItem"
+        ><AddIcon
+      /></TButton>
     </div>
   </div>
 </template>
 
-<script lang="ts" setup>
-  import { Dialog } from '@nutui/nutui';
-  import { inject, onMounted, ref, watch, computed } from 'vue';
-  import { useI18n } from 'vue-i18n';
-  import { onBeforeRouteLeave, useRouter } from 'vue-router';
-  import draggable from "vuedraggable";
-  
-  const { t } = useI18n();
-  const router = useRouter();
-  const { type, id } = defineProps<{
-    type: string;
-    id: string;
-  }>();
-
-  const form = inject<Sub | Collection>('form');
-
-  // 此处 key 需要与 i18n 的 actions 中的 key 相同
-  // 值的次序需要与该选项的 options 值 顺序相同
-  const opt = {
-    'Regex Filter': [0, 1],
-    'Regex Sort Operator': ['asc', 'desc', 'original'],
-  };
-
-  const input1 = ref('');
-  const input2 = ref('');
-
-  const mode = ref();
-  const value = ref();
-  const dragData = computed({
-    get() {
-      return Array.isArray(value.value) ? value.value.map((item, index) => ({
-        id: index + JSON.stringify(item),
-        value: item,
-      })) : []
-    },
-    set(val) {
-      val.map((item, index) => {
-        value.value[index] = item.value
-      })
-    }
-  })
-
-  const onClickTag = el => {
-    const index = [...el.currentTarget.parentElement.children].indexOf(
-      el.currentTarget
+<script setup lang="ts">
+import { AddIcon, CloseIcon } from "tdesign-icons-vue-next";
+import { computed, inject, onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { onBeforeRouteLeave } from "vue-router";
+import Draggable from "vuedraggable";
+import { showNotify } from "@/plugin/tdesign";
+type RenameExpression = { expr: string; now: string };
+type RegexValue = string | RenameExpression;
+type RegexFilterArgs = { keep: boolean; regex: RegexValue[] };
+type RegexSortArgs = { order: string; expressions: RegexValue[] };
+type DraggableRegex = { id: string; value: RegexValue };
+const props = defineProps<{ type: string; id: string }>(); const { t } = useI18n();
+const form = inject<Sub | Collection>("form");
+const input1 = ref("");
+const input2 = ref("");
+const mode = ref<string | number>(0);
+const value = ref<RegexValue[]>([]);
+const editDialogVisible = ref(false);
+const editingIndex = ref<number>();
+const leaveDialogVisible = ref(false);
+let resolveLeave: ((allow: boolean) => void) | undefined;
+const isRenameOperator = props.type === "Regex Rename Operator";
+const hasMode = props.type === "Regex Filter" || props.type === "Regex Sort Operator";
+const modeOptions = computed<readonly (string | number)[]>(() =>
+  props.type === "Regex Filter" ? [0, 1] : ["asc", "desc", "original"],
+);
+const findAction = () => form?.process.find((item) => item.id === props.id);
+const dragData = computed<DraggableRegex[]>({
+  get: () =>
+    value.value.map((expression, index) => ({
+      id: `${index}-${JSON.stringify(expression)}`,
+      value: expression,
+    })),
+  set: (expressions) => {
+    value.value.splice(
+      0,
+      value.value.length,
+      ...expressions.map((expression) => expression.value),
     );
-    if (input1.value || input2.value) {
-      Dialog({
-        title: t('editorPage.subConfig.pop.clickTag.title'),
-        content: t('editorPage.subConfig.pop.clickTag.content'),
-        popClass: 'auto-dialog',
-        okText: t(`editorPage.subConfig.pop.clickTag.confirm`),
-        cancelText: t(`editorPage.subConfig.pop.clickTag.cancel`),
-        onOk: () => editTag(index),
-        // onCancel: () => resolve(false),
-        // @ts-ignore
-        closeOnClickOverlay: true,
-      });
-    } else {
-      editTag(index);
-    }
-  };
-
-  const editTag = index => {
-    const oldValue = value.value[index];
-
-    value.value.splice(index, 1);
-    if (type === 'Regex Rename Operator') {
-      input1.value = oldValue.expr;
-      input2.value = oldValue.now;
-    } else {
-      input1.value = oldValue;
-    }
-  };
-
-  const deleteRegexItem = index => {
-    value.value.splice(index, 1);
-  };
-
-  const addItem = () => {
-    if (!input1.value) return;
-    if (type === 'Regex Rename Operator') {
-      value.value.push({
-        expr: input1.value,
-        now: input2.value,
-      });
-    } else {
-      value.value.push(input1.value);
-    }
-    input1.value = '';
-    input2.value = '';
-  };
-
-  // 挂载时将 value 值指针指向 form 对应的数据
-  onMounted(() => {
-    const item = form.process.find(item => item.id === id);
-    if (item) {
-      switch (type) {
-        case 'Regex Filter':
-          value.value = item.args.regex;
-          mode.value = item.args.keep ? 0 : 1;
-          break;
-        case 'Regex Sort Operator':
-          const order = item.args?.order || 'asc';
-          let expressions = item.args?.expressions;
-          if (Array.isArray(item.args)) {
-              expressions = item.args;
-          }
-          if (!Array.isArray(expressions)) {
-              expressions = [];
-          }
-          item.args = { order, expressions };
-          value.value = item.args.expressions;
-          mode.value = item.args.order;
-          break;
-        default:
-          value.value = item.args;
-          break;
-      }
-    }
-  });
-
-  watch(mode, () => {
-    const item = form.process.find(item => item.id === id);
-    if (item && type === 'Regex Filter') {
-      item.args.keep = !mode.value;
-    }
-    if (item && type === 'Regex Sort Operator') {
-      item.args.order = mode.value;
-    }
-  });
-
-  const confirmLeave = () => {
-    return new Promise(resolve => {
-      Dialog({
-        title: t('editorPage.subConfig.pop.leaveConfirmTitle'),
-        content: t('editorPage.subConfig.pop.leaveContent'),
-        popClass: 'auto-dialog',
-        okText: t(`editorPage.subConfig.pop.leaveConfirm`),
-        cancelText: t(`editorPage.subConfig.pop.leaveCancel`),
-        onOk: () => {
-          resolve(true);
-        },
-        onCancel: () => resolve(false),
-        // @ts-ignore
-        closeOnClickOverlay: true,
-      });
+  },
+});
+const tagText = (expression: RegexValue): string =>
+  typeof expression === "string"
+    ? expression
+    : `${expression.expr}  ⇒  ${expression.now}`;
+const isValidRegex = (expression: string): boolean => {
+  try {
+    new RegExp(expression);
+    return true;
+  } catch {
+    return false;
+  }
+};
+const editTag = (index: number): void => {
+  const expression = value.value[index];
+  if (expression === undefined) return;
+  value.value.splice(index, 1);
+  if (typeof expression === "string") {
+    input1.value = expression;
+    return;
+  }
+  input1.value = expression.expr;
+  input2.value = expression.now;
+};
+const requestEdit = (index: number): void => {
+  if (input1.value || input2.value) {
+    editingIndex.value = index;
+    editDialogVisible.value = true;
+    return;
+  }
+  editTag(index);
+};
+const cancelEdit = (): void => {
+  editingIndex.value = undefined;
+};
+const confirmEdit = (): void => {
+  if (editingIndex.value !== undefined) editTag(editingIndex.value);
+  editDialogVisible.value = false;
+  cancelEdit();
+};
+const deleteRegexItem = (index: number): void => {
+  value.value.splice(index, 1);
+};
+const cancelLeave = (): void => {
+  resolveLeave?.(false);
+  resolveLeave = undefined;
+};
+const confirmLeave = (): void => {
+  resolveLeave?.(true);
+  resolveLeave = undefined;
+};
+const addItem = (): void => {
+  if (!input1.value) return;
+  if (!isValidRegex(input1.value)) {
+    showNotify({
+      type: "danger",
+      title: t("editorPage.subConfig.actions.pasteAction.invalidData"),
     });
-  };
-
-  onBeforeRouteLeave(async (to, from, next) => {
-    if (input1.value || input2.value) {
-      const result = await confirmLeave();
-      next(result);
-    }
-    next();
+    return;
+  }
+  value.value.push(
+    isRenameOperator ? { expr: input1.value, now: input2.value } : input1.value,
+  );
+  input1.value = "";
+  input2.value = "";
+};
+onMounted(() => {
+  const action = findAction();
+  if (!action) return;
+  if (props.type === "Regex Filter") {
+    const args = action.args as RegexFilterArgs;
+    value.value = Array.isArray(args?.regex) ? args.regex : [];
+    mode.value = args?.keep ? 0 : 1;
+    return;
+  }
+  if (props.type === "Regex Sort Operator") {
+    const args = action.args;
+    const order = Array.isArray(args)
+      ? "asc"
+      : ((args as Partial<RegexSortArgs>)?.order ?? "asc");
+    const expressions = Array.isArray(args)
+      ? args
+      : (args as Partial<RegexSortArgs>)?.expressions;
+    const normalized: RegexSortArgs = {
+      order,
+      expressions: Array.isArray(expressions) ? expressions : [],
+    };
+    action.args = normalized;
+    value.value = normalized.expressions;
+    mode.value = normalized.order;
+    return;
+  }
+  value.value = Array.isArray(action.args) ? action.args : [];
+});
+watch(mode, () => {
+  const action = findAction();
+  if (!action) return;
+  if (props.type === "Regex Filter")
+    (action.args as RegexFilterArgs).keep = !mode.value;
+  if (props.type === "Regex Sort Operator")
+    (action.args as RegexSortArgs).order = String(mode.value);
+});
+onBeforeRouteLeave(() => {
+  if (!input1.value && !input2.value) return true;
+  leaveDialogVisible.value = true;
+  return new Promise<boolean>((resolve) => {
+    resolveLeave = resolve;
   });
+});
 </script>
 
-<style lang="scss" scoped>
-  .des-label {
-    font-size: 12px;
-    margin-bottom: 8px;
-    color: var(--comment-text-color);
-
-    &:not(:first-child) {
-      margin-top: 16px;
-    }
-  }
-
-  .nut-radiogroup {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-
-  .tag-wrapper {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    margin-bottom: 12px;
-    max-width: 100%;
-    cursor: pointer;
-
-    &:active {
-      cursor: grabbing;
-      cursor: -moz-grabbing;
-      cursor: -webkit-grabbing;
-    }
-
-    .tag-item {
-      max-width: 100%;
-      margin-right: 8px;
-      margin-bottom: 8px;
-
-      span {
-        max-width: 95%;
-        min-width: 20px;
-        display: -webkit-box;
-        white-space: normal !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        word-wrap: break-word;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-      }
-    }
-  }
-
-  .chosentag {
-    box-shadow: 0 0 5px var(--primary-color);
-    overflow: hidden;
-  }
-
-  .input-wrapper {
-    display: flex;
-    align-items: center;
-
-    > view.nut-input {
-      background: transparent;
-      padding: 8px 12px;
-      margin-right: 16px;
-    }
-
-    > svg {
-      width: 20px;
-      height: 20px;
-      color: var(--primary-color);
-      flex: 1;
-      padding-right: 12px;
-    }
-  }
+<style src="./EditableTags.scss" lang="scss" scoped />
+<style scoped>
+.option-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 </style>

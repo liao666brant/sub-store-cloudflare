@@ -4,7 +4,6 @@ import { useAppNotifyStore } from "@/store/appNotify";
 import { useGlobalStore } from "@/store/global";
 import { useSettingsStore } from "@/store/settings";
 import { useSubsStore } from "@/store/subs";
-// import { Toast } from '@nutui/nutui';
 
 export const initStores = async (
   needNotify: boolean,
@@ -21,14 +20,8 @@ export const initStores = async (
   if (needRefreshCache) {
     showNotify({ title: t("globalNotify.refresh.loading"), type: "primary" });
   }
-  // Toast.loading(t('globalNotify.refresh.loading'), {
-  // cover: true,
-  // id: 'refresh',
-  // });
   globalStore.setLoading(true);
   globalStore.setFetchResult(true);
-
-  // Toast.hide('refresh');
   // 更新所有数据
   try {
     localStorage.removeItem("envCache");

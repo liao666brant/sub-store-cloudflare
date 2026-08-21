@@ -6,28 +6,35 @@
     :title="t('editorPage.commonTips.open')"
     @click.stop="openTips"
   >
-    <font-awesome-icon icon="fa-solid fa-circle-question" />
+    <HelpCircleIcon />
   </button>
+  <TDialog
+    :visible="visible"
+    width="320px"
+    placement="center"
+    :cancel-btn="null"
+    confirm-btn="OK"
+    @close="visible = false"
+    @confirm="visible = false"
+  >
+    <template #header>{{ t('editorPage.commonTips.title') }}</template>
+    <p>{{ t('editorPage.commonTips.content') }}</p>
+  </TDialog>
 </template>
 
 <script setup lang="ts">
-import { Dialog } from "@nutui/nutui";
+import { HelpCircleIcon } from "tdesign-icons-vue-next";
+import { Dialog as TDialog } from "tdesign-vue-next";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
-const openTips = () => {
-  Dialog({
-    title: t("editorPage.commonTips.title"),
-    content: t("editorPage.commonTips.content"),
-    popClass: "auto-dialog",
-    textAlign: "left",
-    okText: "OK",
-    noCancelBtn: true,
-    closeOnPopstate: true,
-    lockScroll: false,
-  });
+const openTips = (): void => {
+  visible.value = true;
 };
+
+const visible = ref(false);
 </script>
 
 <style lang="scss" scoped>
@@ -47,9 +54,8 @@ const openTips = () => {
   justify-content: center;
 
   &:hover,
-  &:focus {
+  &:focus-visible {
     color: var(--primary-color);
-    outline: none;
   }
 
   svg {

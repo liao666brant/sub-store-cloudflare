@@ -3,19 +3,18 @@
     <p class="des-label">
       {{ $t(`editorPage.subConfig.nodeActions['${type}'].des[1]`) }}
     </p>
-    <nut-radiogroup direction="horizontal" v-model="mode">
-      <nut-radio v-for="(key, index) in opt[type].mode" :label="key" :key="index"
+    <TRadioGroup v-model="mode" class="option-grid option-grid--two">
+      <TRadio v-for="(key, index) in opt[type].mode" :value="key" :key="index"
         >{{
           $t(`editorPage.subConfig.nodeActions['${type}'].modeOptions[${index}]`)
         }}
-      </nut-radio>
-    </nut-radiogroup>
+      </TRadio>
+    </TRadioGroup>
     <p class="des-label">
       {{ $t(`editorPage.subConfig.nodeActions['${type}'].des[0]`) }}
     </p>
-    <nut-checkboxgroup class="checkbox-group" v-model="value">
-      <nut-checkbox
-        :icon-size="16"
+    <TCheckboxGroup class="checkbox-group" v-model="value">
+      <TCheckbox
         v-for="(item, index) in opt[type].value"
         :key="item"
         :label="item"
@@ -24,8 +23,8 @@
         <img :src="tw" alt="">&nbsp;{{ item }}
       </span>
       <span v-else>{{ $t(`editorPage.subConfig.nodeActions['${type}'].options[${index}]`) }}</span>
-      </nut-checkbox>
-    </nut-checkboxgroup>
+      </TCheckbox>
+    </TCheckboxGroup>
   </div>
 </template>
 
@@ -125,13 +124,15 @@
       }
     }
 
-    view {
+    :deep(.t-checkbox) {
       margin-bottom: 16px;
 
-      :deep(.nut-checkbox__label) {
+      :deep(.t-checkbox__label) {
         font-size: 14px;
         color: var(--second-text-color);
       }
     }
   }
+  .option-grid { display: grid; gap: 8px; }
+  .option-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 </style>

@@ -1,170 +1,244 @@
 <template>
-  <div class="tools-page">
-    <section class="tool-card">
-      <h2>{{ t('toolsPage.converter.title') }}</h2>
-      <p>{{ t('toolsPage.converter.desc') }}</p>
+  <main class="tools-page">
+    <TCard class="tool-card" :title="t('toolsPage.converter.title')">
+      <p class="tool-description">{{ t('toolsPage.converter.desc') }}</p>
       <div class="row">
-        <select v-model="conversionKind">
-          <option value="proxy">{{ t('toolsPage.converter.proxy') }}</option>
-          <option value="rule">{{ t('toolsPage.converter.rule') }}</option>
-        </select>
-        <select v-model="conversionTarget">
-          <option v-for="target in conversionTargets" :key="target" :value="target">{{ target }}</option>
-        </select>
+        <TSelect v-model="conversionKind" size="small" :options="conversionKindOptions" />
+        <TSelect v-model="conversionTarget" size="small" :options="conversionTargetOptions" />
       </div>
-      <textarea v-model="conversionInput" :placeholder="t('toolsPage.converter.input')" />
+      <TTextarea v-model="conversionInput" :placeholder="t('toolsPage.converter.input')" :autosize="{ minRows: 6, maxRows: 14 }" />
       <div class="actions">
-        <nut-button type="primary" :loading="converting" @click="runConversion">{{ t('toolsPage.converter.run') }}</nut-button>
-        <nut-button plain type="primary" :disabled="!conversionOutput" @click="copyText(conversionOutput)">{{ t('toolsPage.converter.copy') }}</nut-button>
+        <TButton size="small" theme="primary" :loading="converting" @click="runConversion">
+          {{ t("toolsPage.converter.run") }}
+        </TButton>
+        <TButton size="small" variant="outline" theme="primary" :disabled="!conversionOutput" @click="copyText(conversionOutput)">
+          <template #icon>
+            <FileCopyIcon />
+          </template>
+          {{ t("toolsPage.converter.copy") }}
+        </TButton>
       </div>
-      <textarea v-model="conversionOutput" readonly :placeholder="t('toolsPage.converter.output')" />
+      <TTextarea :model-value="conversionOutput" readonly :placeholder="t('toolsPage.converter.output')" :autosize="{ minRows: 6, maxRows: 14 }" />
       <p v-if="conversionStats" class="stats">{{ conversionStats }}</p>
-    </section>
-
-    <section class="tool-card">
-      <h2>{{ t('toolsPage.shares.title') }}</h2>
-      <p>{{ t('toolsPage.shares.desc') }}</p>
+    </TCard>
+    <TCard class="tool-card" :title="t('toolsPage.shares.title')">
+      <p class="tool-description">{{ t('toolsPage.shares.desc') }}</p>
       <div class="row share-form">
-        <select v-model="shareForm.resourceType">
-          <option value="source">source</option>
-          <option value="collection">collection</option>
-        </select>
-        <input v-model.trim="shareForm.resourceId" :placeholder="t('toolsPage.shares.resourceId')" />
-        <select v-model="shareForm.target">
-          <option value="">auto</option>
-          <option v-for="target in proxyTargets" :key="target" :value="target">{{ target }}</option>
-        </select>
-        <input v-model="shareForm.expiresHours" type="number" min="0" max="8760" :placeholder="t('toolsPage.shares.expires')" />
+        <TSelect v-model="shareForm.resourceType" size="small" :options="resourceTypeOptions" />
+        <TInput v-model="shareForm.resourceId" size="small" :placeholder="t('toolsPage.shares.resourceId')" />
+        <TSelect v-model="shareForm.target" size="small" :options="shareTargetOptions" />
+        <TInput v-model="shareForm.expiresHours" size="small" type="number" :min="0" :max="8760" :placeholder="t('toolsPage.shares.expires')" />
       </div>
-      <nut-button type="primary" :loading="shareCreating" @click="createShare">{{ t('toolsPage.shares.create') }}</nut-button>
-      <div v-if="createdShareUrl" class="created-link" @click="copyText(createdShareUrl)">{{ createdShareUrl }}</div>
-      <p v-if="shares.length === 0" class="empty">{{ t('toolsPage.shares.empty') }}</p>
-      <div v-for="share in shares" :key="share.id" class="list-item">
-        <div>
-          <strong>{{ share.resourceType }}/{{ share.resourceId }}</strong>
-          <small>{{ share.target || 'auto' }} · {{ share.expiresAt ? new Date(share.expiresAt).toLocaleString() : 'never' }}</small>
-        </div>
-        <div class="actions">
-          <nut-button plain size="mini" @click="toggleShare(share)">{{ share.enabled ? t('toolsPage.shares.disable') : t('toolsPage.shares.enable') }}</nut-button>
-          <nut-button plain type="danger" size="mini" @click="removeShare(share.id)">{{ t('myPage.btn.delete') }}</nut-button>
-        </div>
-      </div>
-    </section>
-
-    <section class="tool-card">
-      <h2>{{ t('toolsPage.recycle.title') }}</h2>
-      <p>{{ t('toolsPage.recycle.desc') }}</p>
-      <p v-if="recycleEntries.length === 0" class="empty">{{ t('toolsPage.recycle.empty') }}</p>
-      <div v-for="entry in recycleEntries" :key="entry.id" class="list-item">
-        <div>
-          <strong>{{ entry.resourceType }}/{{ entry.resourceId }}</strong>
-          <small>{{ new Date(entry.deletedAt).toLocaleString() }}</small>
-        </div>
-        <div class="actions">
-          <nut-button plain type="primary" size="mini" @click="restoreEntry(entry.id)">{{ t('toolsPage.recycle.restore') }}</nut-button>
-          <nut-button plain type="danger" size="mini" @click="purgeEntry(entry.id)">{{ t('toolsPage.recycle.purge') }}</nut-button>
-        </div>
-      </div>
-    </section>
-  </div>
+      <TButton size="small" theme="primary" :loading="shareCreating" @click="createShare">{{ t('toolsPage.shares.create') }}</TButton>
+      <TAlert v-if="createdShareUrl" class="created-link" theme="info" :message="createdShareUrl" close-btn @click="copyText(createdShareUrl)" />
+      <TEmpty v-if="shares.length === 0" size="small" :description="t('toolsPage.shares.empty')" />
+      <TList v-else split>
+        <TListItem v-for="share in shares" :key="share.id">
+          <template #default>
+            <div class="list-copy">
+              <strong>{{ share.resourceType }}/{{ share.resourceId }}</strong>
+              <small>{{ share.target || "auto" }} · {{ formatShareExpiration(share.expiresAt) }}</small>
+            </div>
+          </template>
+          <template #action>
+            <TButton size="small" variant="text" @click="toggleShare(share)">
+              {{ share.enabled ? t("toolsPage.shares.disable") : t("toolsPage.shares.enable") }}
+            </TButton>
+            <TButton size="small" variant="text" theme="danger" @click="removeShare(share.id)">
+              {{ t("myPage.btn.delete") }}
+            </TButton>
+          </template>
+        </TListItem>
+      </TList>
+    </TCard>
+    <TCard class="tool-card" :title="t('toolsPage.recycle.title')">
+      <p class="tool-description">{{ t('toolsPage.recycle.desc') }}</p>
+      <TEmpty v-if="recycleEntries.length === 0" size="small" :description="t('toolsPage.recycle.empty')" />
+      <TList v-else split>
+        <TListItem v-for="entry in recycleEntries" :key="entry.id">
+          <template #default>
+            <div class="list-copy">
+              <strong>{{ entry.resourceType }}/{{ entry.resourceId }}</strong>
+              <small>{{ new Date(entry.deletedAt).toLocaleString() }}</small>
+            </div>
+          </template>
+          <template #action>
+            <TButton size="small" variant="text" theme="primary" @click="restoreEntry(entry.id)">
+              {{ t("toolsPage.recycle.restore") }}
+            </TButton>
+            <TButton size="small" variant="text" theme="danger" @click="purgeEntry(entry.id)">
+              {{ t("toolsPage.recycle.purge") }}
+            </TButton>
+          </template>
+        </TListItem>
+      </TList>
+    </TCard>
+  </main>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useCloudflareApi } from '@/api/app';
-import { useAppNotifyStore } from '@/store/appNotify';
+import { FileCopyIcon } from "tdesign-icons-vue-next";
+import {
+  Alert as TAlert,
+  Button as TButton,
+  Card as TCard,
+  Empty as TEmpty,
+  Input as TInput,
+  List as TList,
+  ListItem as TListItem,
+  Select as TSelect,
+  Textarea as TTextarea,
+} from "tdesign-vue-next";
+import { computed, onMounted, reactive, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { useCloudflareApi } from "@/api/app";
+import { showNotify } from "@/plugin/tdesign";
 
+type Share = { readonly id: string; readonly resourceType: string; readonly resourceId: string; readonly target?: string; readonly expiresAt?: string; readonly enabled: boolean };
+type RecycleEntry = { readonly id: string; readonly resourceType: string; readonly resourceId: string; readonly deletedAt: string };
+const proxyTargets = [
+  "mihomo", "stash", "surge", "surge-mac", "surfboard", "loon", "egern",
+  "shadowrocket", "qx", "sing-box", "v2ray", "uri", "json",
+] as const;
+const ruleTargets = ["mihomo", "surge", "loon", "qx"] as const;
 const { t } = useI18n();
 const api = useCloudflareApi();
-const { showNotify } = useAppNotifyStore();
-const proxyTargets = ['mihomo', 'stash', 'surge', 'surge-mac', 'surfboard', 'loon', 'egern', 'shadowrocket', 'qx', 'sing-box', 'v2ray', 'uri', 'json'];
-const ruleTargets = ['mihomo', 'surge', 'loon', 'qx'];
-const conversionKind = ref<'proxy' | 'rule'>('proxy');
-const conversionTarget = ref('mihomo');
-const conversionInput = ref('');
-const conversionOutput = ref('');
-const conversionStats = ref('');
+const conversionKind = ref<"proxy" | "rule">("proxy");
+const conversionTarget = ref("mihomo");
+const conversionInput = ref("");
+const conversionOutput = ref("");
+const conversionStats = ref("");
 const converting = ref(false);
-const shares = ref<any[]>([]);
-const recycleEntries = ref<any[]>([]);
+const shares = ref<readonly Share[]>([]);
+const recycleEntries = ref<readonly RecycleEntry[]>([]);
 const shareCreating = ref(false);
-const createdShareUrl = ref('');
-const shareForm = reactive({ resourceType: 'source', resourceId: '', target: '', expiresHours: '0' });
-const conversionTargets = computed(() => conversionKind.value === 'proxy' ? proxyTargets : ruleTargets);
-
-const runConversion = async () => {
+const createdShareUrl = ref("");
+const shareForm = reactive({ resourceType: "source", resourceId: "", target: "", expiresHours: "0" });
+const conversionKindOptions = [
+  { label: t("toolsPage.converter.proxy"), value: "proxy" },
+  { label: t("toolsPage.converter.rule"), value: "rule" },
+];
+const resourceTypeOptions = [{ label: "source", value: "source" }, { label: "collection", value: "collection" }];
+const conversionTargetOptions = computed(() =>
+  (conversionKind.value === "proxy" ? proxyTargets : ruleTargets).map(value => ({ label: value, value })),
+);
+const shareTargetOptions = [{ label: "auto", value: "" }, ...proxyTargets.map(value => ({ label: value, value }))];
+const notifyError = (error: unknown): void => {
+  showNotify({ type: "danger", title: t("toolsPage.notify.failed", { e: error instanceof Error ? error.message : String(error) }) });
+};
+const notifySuccess = (title: string): void => showNotify({ type: "success", title });
+const formatShareExpiration = (expiresAt?: string): string => expiresAt ? new Date(expiresAt).toLocaleString() : "never";
+const responseData = <T>(response: { readonly data: MyAxiosRes }): T => {
+  if (response.data.status !== "success") {
+    throw new Error(response.data.error.message);
+  }
+  return response.data.data;
+};
+const runConversion = async (): Promise<void> => {
   converting.value = true;
   try {
-    if (!conversionTargets.value.includes(conversionTarget.value)) conversionTarget.value = conversionTargets.value[0];
-    const response = conversionKind.value === 'proxy'
+    if (!conversionTargetOptions.value.some(option => option.value === conversionTarget.value)) {
+      conversionTarget.value = conversionTargetOptions.value[0]?.value ?? "mihomo";
+    }
+    const response = conversionKind.value === "proxy"
       ? await api.convertProxies({ content: conversionInput.value, target: conversionTarget.value })
       : await api.convertRules({ content: conversionInput.value, target: conversionTarget.value });
-    const data = (response?.data as any)?.data;
-    conversionOutput.value = String(data?.content || data?.par_res || '');
-    conversionStats.value = `parsed ${data?.parsed || 0} · emitted ${data?.emitted || 0} · skipped ${data?.skipped || 0}`;
-    showNotify({ type: 'success', title: t('toolsPage.notify.converted') });
+    const data = responseData<{
+      readonly content?: string;
+      readonly par_res?: string;
+      readonly parsed?: number;
+      readonly emitted?: number;
+      readonly skipped?: number;
+    }>(response);
+    conversionOutput.value = data.content || data.par_res || "";
+    conversionStats.value = `parsed ${data.parsed || 0} · emitted ${data.emitted || 0} · skipped ${data.skipped || 0}`;
+    notifySuccess(t("toolsPage.notify.converted"));
   } catch (error) {
     notifyError(error);
   } finally {
     converting.value = false;
   }
 };
-
-const loadShares = async () => {
-  const response = await api.getShares();
-  const data = (response?.data as any)?.data;
-  shares.value = Array.isArray(data) ? data : [];
+const loadShares = async (): Promise<void> => {
+  shares.value = responseData<readonly Share[]>(await api.getShares());
 };
-const loadRecycle = async () => {
-  const response = await api.getRecycleBin();
-  const data = (response?.data as any)?.data;
-  recycleEntries.value = Array.isArray(data) ? data : [];
+const loadRecycle = async (): Promise<void> => {
+  recycleEntries.value = responseData<readonly RecycleEntry[]>(await api.getRecycleBin());
 };
-const createShare = async () => {
+const createShare = async (): Promise<void> => {
   shareCreating.value = true;
   try {
-    const response = await api.createShare({
+    const data = responseData<{ readonly url?: string }>(await api.createShare({
       resourceType: shareForm.resourceType,
       resourceId: shareForm.resourceId,
       target: shareForm.target || undefined,
       expiresIn: Math.max(0, Number(shareForm.expiresHours) || 0) * 3600,
-    });
-    createdShareUrl.value = String((response?.data as any)?.data?.url || '');
+    }));
+    createdShareUrl.value = data.url || "";
     await loadShares();
-    showNotify({ type: 'success', title: t('toolsPage.notify.shareCreated') });
+    notifySuccess(t("toolsPage.notify.shareCreated"));
   } catch (error) {
     notifyError(error);
   } finally {
     shareCreating.value = false;
   }
 };
-const toggleShare = async (share: any) => { await api.updateShare(share.id, { enabled: !share.enabled }); await loadShares(); };
-const removeShare = async (id: string) => { await api.deleteShare(id); await Promise.all([loadShares(), loadRecycle()]); };
-const restoreEntry = async (id: string) => { await api.restoreRecycleEntry(id); await loadRecycle(); };
-const purgeEntry = async (id: string) => { await api.deleteRecycleEntry(id); await loadRecycle(); };
-const copyText = async (value: string) => { await navigator.clipboard.writeText(value); showNotify({ type: 'success', title: t('toolsPage.notify.copied') }); };
-const notifyError = (error: unknown) => showNotify({ type: 'danger', title: t('toolsPage.notify.failed', { e: error instanceof Error ? error.message : String(error) }) });
-
-onMounted(() => Promise.all([loadShares(), loadRecycle()]));
+const toggleShare = async (share: Share): Promise<void> => {
+  try {
+    await api.updateShare(share.id, { enabled: !share.enabled });
+    await loadShares();
+  } catch (error) {
+    notifyError(error);
+  }
+};
+const removeShare = async (id: string): Promise<void> => {
+  try {
+    await api.deleteShare(id);
+    await Promise.all([loadShares(), loadRecycle()]);
+  } catch (error) {
+    notifyError(error);
+  }
+};
+const restoreEntry = async (id: string): Promise<void> => {
+  try {
+    await api.restoreRecycleEntry(id);
+    await loadRecycle();
+  } catch (error) {
+    notifyError(error);
+  }
+};
+const purgeEntry = async (id: string): Promise<void> => {
+  try {
+    await api.deleteRecycleEntry(id);
+    await loadRecycle();
+  } catch (error) {
+    notifyError(error);
+  }
+};
+const copyText = async (value: string): Promise<void> => {
+  try {
+    await navigator.clipboard.writeText(value);
+    notifySuccess(t("toolsPage.notify.copied"));
+  } catch (error) {
+    notifyError(error);
+  }
+};
+onMounted(() => {
+  void Promise.all([loadShares(), loadRecycle()]).catch(notifyError);
+});
 </script>
 
 <style lang="scss" scoped>
-.tools-page { min-height: 100%; padding: var(--safe-area-side); display: flex; flex-direction: column; gap: 10px; }
-.tool-card { padding: 16px; border-radius: var(--item-card-radios); background: var(--card-color); color: var(--second-text-color); }
-h2 { margin: 0; color: var(--primary-text-color); font-size: 16px; }
-p { color: var(--comment-text-color); font-size: 12px; line-height: 1.6; }
-.row { display: flex; gap: 8px; margin-bottom: 8px; }
-select, input, textarea { box-sizing: border-box; border: 1px solid var(--divider-color); border-radius: 8px; background: var(--background-color); color: var(--primary-text-color); }
-select, input { min-height: 38px; padding: 0 10px; }
-textarea { width: 100%; min-height: 150px; padding: 10px; resize: vertical; font-family: monospace; }
-.actions { display: flex; gap: 8px; margin: 8px 0; }
+.tools-page { display: flex; min-height: 100%; flex-direction: column; gap: var(--app-space-control); padding: var(--app-space-inline-safe); padding-bottom: calc(var(--app-space-block) + env(safe-area-inset-bottom)); }
+.tool-card { color: var(--td-text-color-primary); }
+.tool-description, .stats { color: var(--td-text-color-secondary); font-size: var(--td-font-size-body-small); line-height: 1.6; }
+.tool-description { word-break: keep-all; }
+.row, .actions { display: flex; gap: var(--app-space-control); margin-block: var(--app-space-control); }
+.row > * { min-width: 0; flex: 1; }
 .share-form { flex-wrap: wrap; }
-.share-form input { flex: 1; min-width: 150px; }
-.created-link { margin: 10px 0; padding: 10px; border-radius: 8px; background: var(--background-color); overflow-wrap: anywhere; cursor: copy; font-size: 12px; }
-.list-item { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--divider-color); }
-.list-item div:first-child { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.list-item strong { color: var(--primary-text-color); font-size: 13px; overflow-wrap: anywhere; }
-.list-item small, .stats, .empty { color: var(--comment-text-color); }
-@media (max-width: 520px) { .row { flex-direction: column; } .list-item { align-items: flex-start; flex-direction: column; padding: 10px 0; } }
+.share-form > * { min-width: 150px; }
+.created-link { margin-top: var(--app-space-control); cursor: copy; overflow-wrap: anywhere; }
+.list-copy { display: flex; min-width: 0; flex-direction: column; gap: var(--app-space-compact); overflow-wrap: anywhere; }
+.list-copy small { color: var(--td-text-color-secondary); }
+@media (max-width: 520px) { .row { flex-direction: column; } .share-form > * { min-width: 0; } }
 </style>

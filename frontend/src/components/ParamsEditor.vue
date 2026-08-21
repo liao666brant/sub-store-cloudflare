@@ -16,9 +16,8 @@
           >
             <div class="item">
               <div class="input-container">
-                <nut-textarea
+                <TTextarea
                   v-model="item.key"
-                  :border="false"
                   placeholder="key"
                   type="text"
                   :rows="1"
@@ -37,9 +36,8 @@
               </div>
             </div>
             <div class="item">
-              <nut-textarea
+              <TTextarea
                 v-model="item.value"
-                :border="false"
                 placeholder="value"
                 type="text"
                 :rows="1"
@@ -62,6 +60,7 @@
 </template>
 
 <script lang="ts" setup>
+import { Textarea as TTextarea } from "tdesign-vue-next";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
@@ -98,9 +97,9 @@ const paramsArgumentsLocal = computed({
 const keyOccurrences = ref<Record<string, number>>({});
 
 // 更新键名出现次数的函数
-const updateKeyOccurrences = (args) => {
-  const occurrences = {};
-  args.forEach((item) => {
+const updateKeyOccurrences = (args: ParamItem[]): void => {
+  const occurrences: Record<string, number> = {};
+  args.forEach((item: ParamItem) => {
     if (item.key && item.key.trim() !== "") {
       occurrences[item.key] = (occurrences[item.key] || 0) + 1;
     }
@@ -109,7 +108,7 @@ const updateKeyOccurrences = (args) => {
 };
 
 // 检查一个键名是否重复
-const isDuplicateKey = (key) => {
+const isDuplicateKey = (key: string): boolean => {
   return key && keyOccurrences.value[key] > 1;
 };
 
@@ -133,7 +132,7 @@ const emptyTipsText = computed(() =>
   t(`editorPage.subConfig.nodeActions['${props.type}'].paramsEmpty`),
 );
 
-const deleteItem = (index) => {
+const deleteItem = (index: number): void => {
   const newParamsArguments = [...props.paramsArguments];
   newParamsArguments.splice(index, 1);
   emit("update:paramsArguments", newParamsArguments);
@@ -141,14 +140,14 @@ const deleteItem = (index) => {
   updateKeyOccurrences(newParamsArguments);
 };
 
-const trimValue = (item, field) => {
+const trimValue = (item: ParamItem, field: keyof ParamItem): void => {
   if (item[field] && typeof item[field] === "string") {
     item[field] = item[field].replace(/\s+/g, "");
   }
 };
 
 // 处理键名失焦事件
-const handleKeyBlur = (item, index) => {
+const handleKeyBlur = (item: ParamItem, _index: number): void => {
   // 先去除空白符
   trimValue(item, "key");
 
@@ -205,7 +204,7 @@ const handleKeyBlur = (item, index) => {
             }
           }
 
-          :deep(.nut-textarea) {
+          :deep(.t-textarea) {
             width: 100%;
             background: transparent;
             padding: 8px 12px;
@@ -216,7 +215,7 @@ const handleKeyBlur = (item, index) => {
               color: var(--danger-color, #ff4444);
             }
 
-            :deep(.nut-textarea__textarea) {
+            :deep(textarea) {
               color: inherit;
               min-height: unset;
               height: auto;

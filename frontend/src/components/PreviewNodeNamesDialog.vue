@@ -1,52 +1,57 @@
 <template>
-  <nut-dialog
-    visible
-    teleport="#app"
-    pop-class="preview-node-names-dialog auto-dialog"
-    :title="title"
-    text-align="left"
-    close-on-popstate
+  <TDialog
+    v-model:visible="visible"
+    attach="#app"
+    dialog-class-name="preview-node-names-dialog auto-dialog"
+    :header="title"
+    :cancel-btn="null"
+    :confirm-btn="null"
+    destroy-on-close
+    prevent-scroll-through
+    show-overlay
     @closed="emit('close')"
   >
     <div class="preview-node-names-content">
       <p class="preview-node-names-desc">
-        {{ t('comparePage.nodeNames.descriptionBefore') }}
-        {{ t('comparePage.nodeNames.aiLink') }}
+        <span class="preview-node-names-desc-sentence">{{ t('comparePage.nodeNames.descriptionBefore') }}</span>
+        <span class="preview-node-names-desc-sentence">{{ t('comparePage.nodeNames.aiLink') }}</span>
       </p>
-      <textarea
+      <TTextarea
         class="preview-node-names-textarea"
-        :value="nodeNamesText"
+        :model-value="nodeNamesText"
         readonly
+        :autosize="{ minRows: 10, maxRows: 14 }"
       />
     </div>
     <template #footer>
-      <nut-button
+      <TButton
         size="small"
-        plain
-        type="primary"
+        variant="outline"
+        theme="primary"
         class="preview-node-names-footer-button"
         @click="copyNodeNames"
       >
         {{ t('comparePage.nodeNames.copyAll') }}
-      </nut-button>
-      <nut-button
+      </TButton>
+      <TButton
         size="small"
-        type="primary"
+        theme="primary"
         class="preview-node-names-footer-button"
         @click="copyPrompt"
       >
         {{ t('comparePage.nodeNames.copyPrompt') }}
-      </nut-button>
+      </TButton>
     </template>
-  </nut-dialog>
+  </TDialog>
 </template>
 
 <script lang="ts" setup>
-import { Toast } from '@nutui/nutui';
 import { useClipboard } from '@vueuse/core';
-import { computed } from 'vue';
+import { Button as TButton, Dialog as TDialog, Textarea as TTextarea } from "tdesign-vue-next";
+import { computed, ref } from 'vue';
 import useV3Clipboard from 'vue-clipboard3';
 import { useI18n } from 'vue-i18n';
+import { showNotify } from '@/plugin/tdesign';
 import {
   formatPreviewNodeInfoPrompt,
   formatPreviewNodeNames,
@@ -59,7 +64,8 @@ const props = defineProps<{
   nodeInfos: PreviewNodeInfo[];
 }>();
 
-const emit = defineEmits(['close']);
+const emit = defineEmits<{ readonly close: [] }>();
+const visible = ref(true);
 
 const { t } = useI18n();
 const { copy, isSupported } = useClipboard();
@@ -90,9 +96,10 @@ const copyText = async (text: string, successText: string) => {
     } else {
       await copyFallback(text);
     }
-    Toast.text(successText);
-  } catch (e) {
-    Toast.fail(t('comparePage.nodeNames.copyFailed', { e: e?.message ?? e }));
+    showNotify({ type: 'success', title: successText });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    showNotify({ type: 'danger', title: t('comparePage.nodeNames.copyFailed', { e: message }) });
   }
 };
 
@@ -105,25 +112,25 @@ const copyPrompt = async () => {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .preview-node-names-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(72vw, 520px);
-  max-width: 100%;
-  color: var(--second-text-color);
+  width: 100%;
+  max-width: 520px;
+  color: var(--td-text-color-primary);
 }
 
 .preview-node-names-desc {
   margin: 0;
-  color: var(--comment-text-color);
-  font-size: 13px;
+  color: var(--td-text-color-secondary);
+  font-size: 14px;
   line-height: 1.6;
   text-align: left;
 
   a {
-    color: var(--primary-color);
+    color: var(--td-brand-color);
     text-decoration: underline;
   }
 }
@@ -133,19 +140,19 @@ const copyPrompt = async () => {
   height: 220px;
   padding: 10px 12px;
   resize: none;
-  border: 1px solid var(--divider-color);
+  border: 1px solid var(--td-component-stroke);
   border-radius: 6px;
   outline: none;
-  color: var(--primary-text-color);
-  background: var(--card-color);
+  color: var(--td-text-color-primary);
+  background: var(--td-bg-color-container);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
   white-space: pre;
   overflow: auto;
 
   &:focus {
-    border-color: var(--primary-color);
+    border-color: var(--td-brand-color);
   }
 }
 
@@ -154,12 +161,17 @@ const copyPrompt = async () => {
 }
 
 @media screen and (max-width: 520px) {
-  .preview-node-names-content {
-    width: 76vw;
+  .preview-node-names-dialog {
+    padding-inline: var(--app-space-inline-safe);
   }
 
   .preview-node-names-textarea {
     height: 180px;
+  }
+
+  .preview-node-names-desc-sentence {
+    display: block;
+    white-space: pre-line;
   }
 }
 </style>

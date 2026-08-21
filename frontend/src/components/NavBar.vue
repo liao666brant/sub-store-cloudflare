@@ -1,146 +1,104 @@
 <template>
-  <div
-    class="nav-bar-wrapper"
-  >
-    <nav>
-      <nut-navbar
-        @on-click-back="back"
-        :title="currentTitle"
+  <nav class="nav-bar-wrapper" :aria-label="currentTitle">
+    <div class="nav-bar-wrapper__leading">
+      <TButton
+        v-if="isNeedBack"
+        class="nav-bar-wrapper__action"
+        variant="text"
+        shape="square"
+        :aria-label="t('navBar.actions.back')"
+        :title="t('navBar.actions.back')"
+        @click="back"
       >
-        <template #left>
-          <button
-            v-if="isNeedBack"
-            type="button"
-            class="nav-leading-button icon-back"
-            :aria-label="t('navBar.actions.back')"
-            :title="t('navBar.actions.back')"
-            @click.stop="back"
-          >
-            <font-awesome-icon
-              class="icon-back-icon"
-              icon="fa-solid fa-arrow-left"
-            />
-          </button>
-          <div v-else :class="leftIconClass" @click.stop="back"></div>
-          <div class="icon-group">
-            <button
-              v-if="showRefreshButton"
-              type="button"
-              @click.stop="refresh"
-              class="navBar-left-icon navBar-left-icon--refresh"
-              :style="{ left: navLeftButtonLeft.refresh }"
-              :aria-label="t('navBar.actions.refresh')"
-              :title="t('navBar.actions.refresh')"
-            >
-              <font-awesome-icon
-                class="icon fa-arrow-rotate-right"
-                icon="fa-solid fa-arrow-rotate-right"
-              />
-            </button>
-            <button
-              v-if="showAddButton"
-              type="button"
-              @click.stop="add(route)"
-              class="navBar-left-icon navBar-left-icon--add"
-              :style="{ left: navLeftButtonLeft.add }"
-              :aria-label="t('navBar.actions.add')"
-              :title="t('navBar.actions.add')"
-            >
-              <font-awesome-icon
-                class="icon fa-plus"
-                icon="fa-solid fa-plus"
-              />
-            </button>
-            <button
-              v-if="showSearchButton"
-              type="button"
-              @click.stop="openListSearch"
-              class="navBar-left-icon navBar-left-icon--search"
-              :class="{ 'is-active': isListSearchActive || listSearchStore.hasQuery }"
-              :style="{ left: navLeftButtonLeft.search }"
-              :aria-label="t('navBar.listSearch.open')"
-              :title="t('navBar.listSearch.open')"
-            >
-              <font-awesome-icon
-                class="icon"
-                icon="fa-solid fa-magnifying-glass"
-              />
-            </button>
-          </div>
-          <div
-            v-if="isListSearchActive"
-            class="nav-search-field"
-            @click.stop
-          >
-            <input
-              ref="searchInputRef"
-              v-model="listSearchQuery"
-              class="nav-search-input"
-              type="search"
-              :placeholder="t('navBar.listSearch.placeholder')"
-              :aria-label="t('navBar.listSearch.placeholder')"
-              @keydown.esc.stop.prevent="closeListSearch"
-            />
-            <button
-              type="button"
-              class="nav-search-clear"
-              :aria-label="listSearchQuery ? t('navBar.listSearch.clear') : t('navBar.listSearch.close')"
-              :title="listSearchQuery ? t('navBar.listSearch.clear') : t('navBar.listSearch.close')"
-              @click.stop="handleSearchCloseButton"
-            >
-              <font-awesome-icon icon="fa-solid fa-circle-xmark" />
-            </button>
-          </div>
-        </template>
-      </nut-navbar>
-    </nav>
-  </div>
+        <ArrowLeftIcon />
+      </TButton>
+      <template v-else>
+        <TButton
+          v-if="showRefreshButton"
+          class="nav-bar-wrapper__action"
+          variant="text"
+          shape="square"
+          :aria-label="t('navBar.actions.refresh')"
+          :title="t('navBar.actions.refresh')"
+          @click="refresh"
+        >
+          <RefreshIcon />
+        </TButton>
+        <TButton
+          v-if="showAddButton"
+          class="nav-bar-wrapper__action"
+          variant="text"
+          shape="square"
+          :aria-label="t('navBar.actions.add')"
+          :title="t('navBar.actions.add')"
+          @click="add"
+        >
+          <AddIcon />
+        </TButton>
+        <TButton
+          v-if="showSearchButton"
+          class="nav-bar-wrapper__action"
+          :class="{ 'nav-bar-wrapper__action--active': isListSearchActive || listSearchStore.hasQuery }"
+          variant="text"
+          shape="square"
+          :aria-label="t('navBar.listSearch.open')"
+          :title="t('navBar.listSearch.open')"
+          @click="openListSearch"
+        >
+          <SearchIcon />
+        </TButton>
+      </template>
+    </div>
+
+    <TInput
+      v-if="isListSearchActive"
+      ref="searchInputRef"
+      v-model="listSearchQuery"
+      class="nav-bar-wrapper__search"
+      clearable
+      size="small"
+      type="search"
+      :placeholder="t('navBar.listSearch.placeholder')"
+      :aria-label="t('navBar.listSearch.placeholder')"
+      @clear="closeListSearch"
+      @keydown.esc.stop.prevent="closeListSearch"
+    />
+    <h1 v-else class="nav-bar-wrapper__title">{{ currentTitle }}</h1>
+  </nav>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
+import { AddIcon, ArrowLeftIcon, RefreshIcon, SearchIcon } from "tdesign-icons-vue-next";
+import { Button as TButton, Input as TInput } from "tdesign-vue-next";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import { useGlobalStore } from "@/store/global";
-import { useSystemStore } from "@/store/system";
-import { useSettingsStore } from '@/store/settings';
-import { storeToRefs } from "pinia";
-import { initStores } from "@/utils/initApp";
-import { useMethodStore } from '@/store/methodStore';
 import { useAppNotifyStore } from "@/store/appNotify";
 import { useListSearchStore } from "@/store/listSearch";
+import { useMethodStore } from "@/store/methodStore";
+import { useSettingsStore } from "@/store/settings";
+import { useSystemStore } from "@/store/system";
+import { initStores } from "@/utils/initApp";
 import i18n from "@/locales";
 
-const { t:i18n_global } = i18n.global;
+const { t: i18nGlobal } = i18n.global;
 const { showNotify } = useAppNotifyStore();
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
-const methodStore = useMethodStore()
-const globalStore = useGlobalStore();
+const methodStore = useMethodStore();
 const systemStore = useSystemStore();
 const settingsStore = useSettingsStore();
 const listSearchStore = useListSearchStore();
-const { appearanceSetting } = storeToRefs(settingsStore);
+const searchInputRef = ref<{ $el: HTMLElement } | null>(null);
 
 onMounted(() => {
   systemStore.initSystemState();
 });
 
-const { navBarHeight, navBartop, navActionOffset } = storeToRefs(systemStore);
-const searchInputRef = ref<HTMLInputElement | null>(null);
-
-const isNeedBack = computed(() => {
-  return route.meta.needNavBack ?? false;
-});
-const leftIconClass = computed(() => {
-  return isNeedBack.value ? "icon-back" : "icon-home";
-});
-
+const isNeedBack = computed(() => route.meta.needNavBack ?? false);
 const currentTitle = computed(() => {
-  if (isListSearchActive.value) {
-    return "";
-  }
+  if (isListSearchActive.value) return "";
 
   if (route.meta.title === "subEditor") {
     const isCollection = route.params.editType === "collections";
@@ -151,326 +109,118 @@ const currentTitle = computed(() => {
     return t(`navBar.pagesTitle.${titleKey}`);
   }
 
-  const metaTitle = route.meta.title;
-  return metaTitle ? t(`navBar.pagesTitle.${metaTitle}`) : undefined;
+  return route.meta.title ? t(`navBar.pagesTitle.${route.meta.title}`) : "";
 });
-const showRefreshButton = computed(() => {
-  return !isNeedBack.value && !appearanceSetting.value.showFloatingRefreshButton;
-});
-const showAddButton = computed(() => {
-  return ["/subs"].includes(route.path)
-    && !appearanceSetting.value.showFloatingAddButton;
-});
-const showSearchButton = computed(() => {
-  return Boolean(route.meta.supportsListSearch);
-});
-const isListSearchActive = computed(() => {
-  return showSearchButton.value
-    && listSearchStore.isSearchOpen
-    && listSearchStore.activeRoutePath === route.path;
-});
+const showRefreshButton = computed(() => !isNeedBack.value && !settingsStore.appearanceSetting.showFloatingRefreshButton);
+const showAddButton = computed(() => route.path === "/subs" && !settingsStore.appearanceSetting.showFloatingAddButton);
+const showSearchButton = computed(() => Boolean(route.meta.supportsListSearch));
+const isListSearchActive = computed(() => showSearchButton.value && listSearchStore.isSearchOpen && listSearchStore.activeRoutePath === route.path);
 const listSearchQuery = computed({
   get: () => listSearchStore.query,
-  set: (value: string) => {
-    listSearchStore.setQuery(value);
-  },
-});
-const navLeftButtonLeft = computed<Record<string, string>>(() => {
-  if (isNeedBack.value) {
-    return {
-      search: "42px",
-    };
-  }
-
-  const buttons: string[] = [];
-  if (showRefreshButton.value) {
-    buttons.push("refresh");
-  }
-  if (showAddButton.value) {
-    buttons.push("add");
-  }
-  if (showSearchButton.value) {
-    buttons.push("search");
-  }
-
-  return buttons.reduce((acc, key, index) => {
-    acc[key] = `${7 + index * 30}px`;
-    return acc;
-  }, {} as Record<string, string>);
+  set: (value: string) => listSearchStore.setQuery(value),
 });
 
-watch(
-  () => route.path,
-  () => {
-    listSearchStore.syncRoute(route.path, Boolean(route.meta.supportsListSearch));
-  },
-  { immediate: true },
-);
+watch(() => route.path, () => {
+  listSearchStore.syncRoute(route.path, Boolean(route.meta.supportsListSearch));
+}, { immediate: true });
 
-const focusSearchInput = async () => {
+const focusSearchInput = async (): Promise<void> => {
   await nextTick();
-  searchInputRef.value?.focus();
+  searchInputRef.value?.$el.querySelector<HTMLInputElement>("input")?.focus();
 };
 
-const openListSearch = async () => {
+const openListSearch = async (): Promise<void> => {
   listSearchStore.open(route.path);
   await focusSearchInput();
 };
 
-const closeListSearch = () => {
-  listSearchStore.close();
+const closeListSearch = (): void => listSearchStore.close();
+
+const add = (): void => {
+  methodStore.invokeMethod("addSub", {});
 };
 
-const handleSearchCloseButton = async () => {
-  if (listSearchQuery.value) {
-    listSearchStore.setQuery("");
-    await focusSearchInput();
+const back = (): void => {
+  if (!isNeedBack.value) return;
+
+  try {
+    if (router.options.history.state.back) {
+      router.back();
+    } else {
+      void router.push("/");
+    }
+  } catch {
+    void router.push("/");
+  }
+};
+
+const refresh = async (): Promise<void> => {
+  if (route.path === "/preview") {
+    window.location.reload();
     return;
   }
 
-  closeListSearch();
-};
-const add = (route: any) => {
-  const routePath = route.path;
-  const addMethodMap = {
-    "/subs": "addSub",
-  };
-  methodStore.invokeMethod(addMethodMap[routePath], {});
-};
-
-const back = () => {
-  if (isNeedBack.value) {
-    try {
-      if (router.options.history.state.back) {
-        router.back();
-      } else {
-        router.push("/");
-      }
-    } catch (error) {
-      router.push("/");
-    }
-  }
-};
-
-const refresh = async () => {
-  if (["/preview"].includes(route.path)) {
-    window.location.reload();
-  } else if (["/subs"].includes(route.path)) {
-    initStores(true, true, true);
-  } else {
-    showNotify({ title: i18n_global("globalNotify.refresh.loading"), type: "primary" });
+  if (route.path === "/subs") {
     await initStores(true, true, true);
+    return;
   }
+
+  showNotify({ title: i18nGlobal("globalNotify.refresh.loading"), type: "primary" });
+  await initStores(true, true, true);
 };
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 .nav-bar-wrapper {
-  top: 0;
-  height: v-bind(navBarHeight);
-  z-index: 20;
-  @include centered-fixed-container;
-
-  nav {
-    .nut-navbar {
-      padding-top: v-bind(navBartop);
-      height: v-bind(navBarHeight);
-      top: 0;
-      box-shadow: none;
-      backdrop-filter: blur(var(--nav-bar-blur));
-      -webkit-backdrop-filter: blur(var(--nav-bar-blur));
-      background: var(--nav-bar-color);
-      border-bottom: var(--divider-color) solid 1px;
-      @media screen and (min-width: 768px) {
-        border-radius: var(--item-card-radios);
-        overflow: hidden;
-      }
-      .nut-navbar__title {
-        position: absolute;
-        left: 50%;
-        top: v-bind(navBartop);
-        bottom: 0;
-        transform: translateX(-50%);
-        width: 53%;
-        max-width: calc(100% - 160px);
-        min-width: 0;
-        margin: 0;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        .title {
-          min-width: 20px;
-          font-size: 18px;
-          font-weight: 600;
-          // line-height: 100%;
-          color: var(--primary-text-color);
-          display: nowrap;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 1;
-          overflow: hidden;
-        }
-
-        .nutui-iconfont {
-          margin-left: 5px;
-        }
-      }
-      .icon-group {
-        .navBar-left-icon {
-          position: absolute;
-          top: v-bind(navActionOffset);
-          width: 32px;
-          height: 32px;
-          box-sizing: border-box;
-          padding: 0;
-          border: 0;
-          margin: 0;
-          background: transparent;
-          transform: translateY(-50%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--icon-nav-bar-right);
-          cursor: pointer;
-          pointer-events: auto;
-          z-index: 3;
-
-          .icon {
-            pointer-events: none;
-            width: 14px;
-            height: 14px;
-            font-size: 14px;
-          }
-
-          &.is-active {
-            color: var(--primary-color);
-          }
-        }
-
-        .navBar-left-icon--refresh,
-        .navBar-left-icon--add,
-        .navBar-left-icon--search {
-          left: 7px;
-        }
-      }
-      .nav-search-field {
-        position: absolute;
-        left: 50%;
-        top: v-bind(navBartop);
-        bottom: 0;
-        width: calc(100% - 220px);
-        max-width: 53%;
-        min-width: 96px;
-        transform: translateX(-50%);
-        display: flex;
-        align-items: center;
-        z-index: 4;
-      }
-
-      .nav-search-input {
-        width: 100%;
-        min-width: 0;
-        height: 32px;
-        box-sizing: border-box;
-        border: 1px solid var(--divider-color);
-        border-radius: var(--item-card-radios);
-        background: var(--card-color);
-        color: var(--primary-text-color);
-        padding: 0 30px 0 10px;
-        font-size: 14px;
-        line-height: 32px;
-        outline: none;
-
-        &::placeholder {
-          color: var(--comment-text-color);
-        }
-
-        &::-webkit-search-cancel-button,
-        &::-webkit-search-decoration {
-          -webkit-appearance: none;
-          appearance: none;
-          display: none;
-        }
-
-        &:focus {
-          border-color: var(--primary-color);
-        }
-      }
-
-      .nav-search-clear {
-        position: absolute;
-        right: 6px;
-        top: 50%;
-        width: 22px;
-        height: 22px;
-        padding: 0;
-        border: 0;
-        margin: 0;
-        background: transparent;
-        color: var(--comment-text-color);
-        transform: translateY(-50%);
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        svg {
-          width: 13px;
-          height: 13px;
-        }
-      }
-      .fa-plus {
-        color: currentColor;
-      }
-      .fa-arrow-rotate-right {
-        color: currentColor;
-      }
-    }
-  }
-}
-
-.nav-leading-button {
-  position: absolute;
-  top: v-bind(navActionOffset);
-  left: 10px;
-  width: 32px;
-  height: 32px;
-  box-sizing: border-box;
-  padding: 0;
-  border: 0;
-  margin: 0;
-  background: transparent;
-  color: var(--icon-nav-bar-right);
-  cursor: pointer;
-  pointer-events: auto;
-  transform: translateY(-50%);
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
+  height: 100%;
+  min-width: 0;
+  padding: 0 var(--app-space-inline-safe, 16px);
+}
 
-  svg {
-    width: 14px;
-    height: 14px;
+.nav-bar-wrapper__leading {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-compact, 6px);
+  min-width: 0;
+}
+
+.nav-bar-wrapper__action {
+  color: var(--td-text-color-secondary, var(--icon-nav-bar-right));
+}
+
+.nav-bar-wrapper__action--active {
+  color: var(--td-brand-color, var(--primary-color));
+}
+
+.nav-bar-wrapper__title,
+.nav-bar-wrapper__search {
+  grid-column: 2;
+  width: min(100%, 34rem);
+}
+
+.nav-bar-wrapper__title {
+  overflow: hidden;
+  margin: 0;
+  color: var(--td-text-color-primary, var(--primary-text-color));
+  font-size: var(--td-font-size-title-medium, 18px);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media screen and (max-width: 479px) {
+  .nav-bar-wrapper {
+    grid-template-columns: minmax(0, 1fr) minmax(96px, 1.5fr) minmax(0, 1fr);
   }
 
-  &:focus {
-    outline: none;
+  .nav-bar-wrapper__title {
+    font-size: var(--td-font-size-body-medium, 14px);
+    white-space: normal;
   }
-}
-
-.nav-leading-placeholder {
-  width: 32px;
-  height: 32px;
-}
-
-
-.icon-back-icon {
-  font-size: 14px;
-  color: var(--icon-nav-bar-right);
-}
-
-.icon-null::before {
-  content: "\2003";
 }
 </style>

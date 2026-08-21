@@ -1,307 +1,214 @@
-<!-- 标签弹窗 -->
 <template>
-  <nut-popup
-    v-model:visible="isVisible"
-    pop-class="tag-popup"
-    position="bottom"
-    :style="{
-      height: `95%`,
-      padding: '20px 12px 0 12px',
-      backgroundColor: 'var(--background-color)',
-    }"
-    :lock-scroll="true"
-    :safe-area-inset-bottom="true"
-    close-icon="close-little"
-    z-index="11000"
-    closeable
-    round
+  <TDrawer
+    :visible="isVisible"
+    placement="bottom"
+    size="95%"
+    :header="t('subPage.tag.addTagTitle')"
+    :footer="false"
+    destroy-on-close
     @close="close"
   >
-    <div class="popup-title">{{ t('subPage.tag.addTagTitle') }}</div>
-    <div class="popup-header">
-      <div class="tag-input">
-        <nut-input
-          class="nut-input-text"
-          v-model.trim="keyword"
-          :placeholder="t('subPage.tag.tagPlaceholder')"
-          type="text"
-          input-align="left"
-          clearable
-          @clear="clearSearch"
-        />
-      </div>
-    </div>
-    <div class="popup-main">
-      <div class="tag-list">
-        <draggable
-          :list="allTagsList"
-          :sort="true"
-          item-key="label"
-          animation="300"
-          :scroll-sensitivity="200"
-          :force-fallback="true"
-          :scroll-speed="8"
-          :scroll="true"
-          @start="onStartDrag"
-          @end="onEndDrag"
-        >
-          <template #item="{ element }">
-            <nut-tag
-              :key="element.label"
-              :class="{ 'active': element.isActive }"
-              @click="handleTagItem(element)"
-            >{{ element.label }}</nut-tag>
-          </template>
-        </draggable>
-        <!-- 新建标签 -->
-        <div class="add-tag-box">
-        <nut-input
+    <TInput
+      v-model="keyword"
+      clearable
+      :placeholder="t('subPage.tag.tagPlaceholder')"
+      @clear="clearSearch"
+    />
+    <div class="tag-list">
+      <draggable :list="allTags" item-key="label" :animation="300">
+        <template #item="{ element }">
+          <TTag
+            v-show="!keyword || element.label.includes(keyword)"
+            :theme="element.isActive ? 'primary' : 'default'"
+            :variant="element.isActive ? 'outline' : 'light-outline'"
+            class="tag-item"
+            @click="handleTagItem(element)"
+          >
+            {{ element.label }}
+          </TTag>
+        </template>
+      </draggable>
+      <div class="add-tag-box">
+        <TInput
           v-if="isAddTag"
-          class="add-tag-input"
-          v-model.trim="addTagValue"
+          v-model="addTagValue"
+          autofocus
           :placeholder="t('subPage.tag.tagPlaceholder')"
-          :autofocus="true"
-          max-length="30"
-          type="text"
-          input-align="left"
-          :border="false"
+          :maxlength="30"
           @blur="saveTag"
-          closeable
         />
-        <nut-tag v-else class="add-tag" @click="addTag">{{ t('subPage.tag.addTagBtn') }}</nut-tag>
-        </div>
+        <TButton
+          v-else
+          size="small"
+          variant="outline"
+          theme="primary"
+          @click="addTag"
+        >
+          <template #icon><AddIcon /></template>
+          {{ t('subPage.tag.addTagBtn') }}
+        </TButton>
       </div>
     </div>
-  </nut-popup>
+  </TDrawer>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from "vue";
+import { AddIcon } from "tdesign-icons-vue-next";
+import {
+  Button as TButton,
+  Drawer as TDrawer,
+  Input as TInput,
+  Tag as TTag,
+} from "tdesign-vue-next";
 import { storeToRefs } from "pinia";
-import { useSubsStore } from "@/store/subs";
-import draggable from "vuedraggable";
-
+import { onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import draggable from "vuedraggable";
+import { useSubsStore } from "@/store/subs";
+
+type TagItem = {
+  label: string;
+  value: string;
+  isActive: boolean;
+};
+
+const props = withDefaults(
+  defineProps<{
+    readonly visible?: boolean;
+    readonly currentTag?: string;
+    readonly type?: string;
+  }>(),
+  {
+    visible: false,
+    currentTag: "",
+    type: "subCol",
+  },
+);
+const emit = defineEmits<{
+  readonly "update:visible": [value: boolean];
+  readonly setTag: [value: string];
+}>();
 
 const { t } = useI18n();
 const subsStore = useSubsStore();
 const { hasSubs, hasCollections, subs, collections } = storeToRefs(subsStore);
-const hasUntagged = ref(false);
-const props = defineProps({
-  visible: {
-    type: Boolean,
-    default: false,
-  },
-  currentTag: {
-    type: String,
-    default: '',
-  },
-  type: {
-    type: String,
-    default: 'subCol',
-  },
-});
 const isVisible = ref(props.visible);
 const keyword = ref("");
 const isAddTag = ref(false);
-const addTagValue = ref('');
-const onStartDrag = () => {};
+const addTagValue = ref("");
+const allTags = ref<TagItem[]>([]);
 
-const onEndDrag = () => {};
+const getTags = (): void => {
+  if (!hasSubs.value && !hasCollections.value) {
+    allTags.value = [];
+    return;
+  }
+
+  const labels = new Set<string>();
+  for (const item of [...subs.value, ...collections.value]) {
+    if (Array.isArray(item.tag)) {
+      for (const label of item.tag) {
+        labels.add(label);
+      }
+    }
+  }
+  const selected = new Set(
+    props.currentTag
+      .split(",")
+      .map(value => value.trim())
+      .filter(Boolean),
+  );
+  allTags.value = [...labels].map(label => ({
+    label,
+    value: label,
+    isActive: selected.has(label),
+  }));
+};
+
 watch(
   () => props.visible,
-  (newValue) => {
-    isVisible.value = newValue;
-    if (newValue) {
+  value => {
+    isVisible.value = value;
+    if (value) {
       getTags();
     }
   },
 );
-const clearSearch = () => {
-  keyword.value = "";
-}
-const getTag = () => {
-  return localStorage.getItem('sub-tag') || 'all';
-}
-const tag = ref(getTag());
-const allTags = ref([]);
-const allTagsList = computed(() => {
-  if (!keyword.value) {
-    return allTags.value
-  }
-  return allTags.value.filter(i => i.label.indexOf(keyword.value) !== -1)
-})
-const getTags = () => {
-  hasUntagged.value = false;
-  if(!hasSubs.value && !hasCollections.value) {
-    allTags.value = []
-    return []
-  }
-  const set = new Set()
-  // 从 subs 和 collections 中获取所有的 tag, 去重
-  subs.value.forEach(sub => {
-    if (Array.isArray(sub.tag) && sub.tag.length > 0) {
-      sub.tag.forEach(i => {
-        set.add(i)
-      });
-    } else {
-      hasUntagged.value = true
-    }
-  })
-  collections.value.forEach(col => {
-    if (Array.isArray(col.tag) && col.tag.length > 0) {
-      col.tag.forEach(i => {
-        set.add(i)
-      });
-    } else {
-      hasUntagged.value = true
-    }
-  })
 
-  let tags: any[] = Array.from(set)
-  if(tags.length === 0) {
-    allTags.value = []
-    return []
-  }
-  tags = tags.map(i => ({ label: i, value: i }));
-  
-  let result = [...tags]
-  // if(hasUntagged.value) result.push({ label: t("specificWord.untagged"), value: "untagged" })
-  if (!result.find(i => i.value === tag.value)) {
-    tag.value = 'all'
-  }
-  // 判断是否包含传入的tags，增加isActive样式
-  const currentTagList = String(props.currentTag || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-  result.forEach(i => {
-    i.isActive = currentTagList.includes(i.value)
-  })
-  allTags.value = result
+const clearSearch = (): void => {
+  keyword.value = "";
 };
 
-const addTag = () => {
-  addTagValue.value = ''
-  isAddTag.value = true
-}
-const saveTag = () => {
-  if(!addTagValue.value) {
-    isAddTag.value = false
-    return
+const addTag = (): void => {
+  addTagValue.value = "";
+  isAddTag.value = true;
+};
+
+const saveTag = (): void => {
+  const value = addTagValue.value.trim();
+  if (!value) {
+    isAddTag.value = false;
+    return;
   }
-  // 如果新增标签和已有标签一样，则不添加，并且选中已有标签
-  if (allTags.value.find(i => i.value === addTagValue.value)) {
-    const index = allTags.value.findIndex(i => i.value === addTagValue.value)
-    allTags.value[index].isActive = true
-    isAddTag.value = false
-    return
+
+  const existing = allTags.value.find(item => item.value === value);
+  if (existing) {
+    existing.isActive = true;
+  } else {
+    allTags.value.push({ label: value, value, isActive: true });
   }
-  allTags.value.push({label: addTagValue.value, value: addTagValue.value, isActive: true})
-  isAddTag.value = false
-}
-const handleTagItem = (item) => {
-  const index = allTags.value.findIndex(i => i.value === item.value)
-  allTags.value[index].isActive = !allTags.value[index].isActive
-}
+  isAddTag.value = false;
+};
 
-onMounted(() => {
-  getTags();
-})
+const handleTagItem = (item: TagItem): void => {
+  item.isActive = !item.isActive;
+};
 
-const emit = defineEmits(["update:visible", "setTag"]);
-
-const show = () => {
+const show = (): void => {
   isVisible.value = true;
   emit("update:visible", true);
 };
 
-const close = () => {
-  const selectedTags = allTags.value.filter(i => i.isActive).map(i => i.value).join(',')
-  emit("setTag", selectedTags);
-  isAddTag.value = false
-  hide();
-}
-const hide = () => {
+const hide = (): void => {
   isVisible.value = false;
   emit("update:visible", false);
 };
-// 暴露方法给父组件
+
+const close = (): void => {
+  emit(
+    "setTag",
+    allTags.value
+      .filter(item => item.isActive)
+      .map(item => item.value)
+      .join(","),
+  );
+  isAddTag.value = false;
+  hide();
+};
+
 defineExpose({ show, close });
+onMounted(getTags);
 </script>
 
 <style lang="scss" scoped>
-.tag-popup {
-  background: var(--background-color);
-  .popup-title {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: center;
-    color: var(--primary-text-color);
-    font-size: 18px;
-    font-weight: bold;
-  }
-  .popup-header {
-    padding: 0 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    .tag-input {
-      width: 100%;
-      .nut-input {
-        background: var(--background-color);
-      }
-    }
-  }
-  .popup-main {
-    padding: 0 10px;
-    .tag-list {
-      padding-top: 20px;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      >div {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      .nut-tag {
-        padding: 4px 10px;
-        text-align: center;
-        font-size: 14px;
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-control);
+  margin-top: var(--app-space-block);
+}
 
-        color: var(--primary-text-color);
+.tag-list :deep(.vuedraggable) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-control);
+}
 
-        &.active {
-          color: var(--primary-color);
-          border: 1px solid var(--primary-color);
-          background: var(--background-color);
+.tag-item {
+  cursor: pointer;
+}
 
-        }
-      }
-      .add-tag-box {
-        display: flex;
-        align-items: center;
-        height: 31px;
-        .add-tag {
-          border: 1px dashed var(--primary-color);
-          color: var(--primary-color);
-          background: var(--background-color);
-
-        }
-        .add-tag-input {
-          padding: 0;
-          background: var(--background-color);
-          display: flex;
-          align-items: center;
-          .nut-input {
-
-          }
-        }
-      }
-    }
-  }
+.add-tag-box {
+  min-width: 160px;
 }
 </style>

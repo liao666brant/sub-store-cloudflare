@@ -1,33 +1,38 @@
 <template>
-  <div class="wrapper">
-    
-    <h3 v-if="isBackend">
-      <p>{{ $t('notFoundPage.backendDesc') }}</p>
-    </h3>
-    <h3 v-else>{{ $t('notFoundPage.title') }}</h3>
-    <router-link to="/">{{ $t('notFoundPage.desc') }}</router-link>
-  </div>
+  <section class="not-found-page">
+    <TEmpty :description="description">
+      <template #action>
+        <TButton theme="primary" @click="goHome">
+          {{ t("notFoundPage.desc") }}
+        </TButton>
+      </template>
+    </TEmpty>
+  </section>
 </template>
 
-<script lang="ts" setup>
-import { useRoute } from 'vue-router';
+<script setup lang="ts">
+import { Button as TButton, Empty as TEmpty } from "tdesign-vue-next";
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
-const isBackend = /\/(api|download)\/.+/.test(route.fullPath)
+const router = useRouter();
+const { t } = useI18n();
+const isBackend = computed(() => /\/(api|download)\/.+/.test(route.fullPath));
+const description = computed(() => isBackend.value ? t("notFoundPage.backendDesc") : t("notFoundPage.title"));
+
+const goHome = (): void => {
+  void router.push("/");
+};
 </script>
 
-<style lang="scss" scoped>
-  .wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    color: var(--primary-text-color);
-
-    h3 {
-      padding: 0 24px 24px 24px;
-    }
-  }
+<style scoped lang="scss">
+.not-found-page {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  padding: var(--app-space-block, 24px);
+  color: var(--td-text-color-primary, var(--primary-text-color));
+}
 </style>

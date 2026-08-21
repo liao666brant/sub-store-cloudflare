@@ -2,7 +2,7 @@
   <div>
     <div class="desc" @click="tips">
       <span>{{ desc }}</span>
-      <nut-icon name="tips"></nut-icon>
+      <HelpCircleIcon />
     </div>
     <ul class="preview-list">
       <li v-for="platform in platformList" :key="platform.name">
@@ -14,30 +14,26 @@
         </div>
 
         <div class="actions">
-          <button
-            class="copy-sub-link"
+          <TButton
+            variant="text"
+            shape="square"
+            size="small"
             :aria-label="t('subPage.actions.openTarget', { name: platform.name })"
             :title="t('subPage.actions.openTarget', { name: platform.name })"
             @click.stop="targetOpen(platform.path)"
           >
-            <svg-icon
-              name="view"
-              class="action-icon"
-              color="var(--comment-text-color)"
-            />
-          </button>
-          <button
-            class="copy-sub-link"
+            <template #icon><BrowseIcon /></template>
+          </TButton>
+          <TButton
+            variant="text"
+            shape="square"
+            size="small"
             :aria-label="t('subPage.actions.copyTarget', { name: platform.name })"
             :title="t('subPage.actions.copyTarget', { name: platform.name })"
             @click.stop="targetCopy(platform.path)"
           >
-            <svg-icon
-              name="copy"
-              class="action-icon"
-              color="var(--comment-text-color)"
-            />
-          </button>
+            <template #icon><FileCopyIcon /></template>
+          </TButton>
         </div>
       </li>
     </ul>
@@ -48,14 +44,15 @@
   import logoIcon from '@/assets/icons/logo.png';
   import { useClipboard } from '@vueuse/core';
   import useV3Clipboard from 'vue-clipboard3';
-  import { useAppNotifyStore } from '@/store/appNotify';
-  import SvgIcon from '@/components/SvgIcon.vue';
+  import { showNotify } from '@/plugin/tdesign';
   import { useHostAPI } from '@/hooks/useHostAPI';
   import { storeToRefs } from "pinia";
   import { useSettingsStore } from '@/store/settings';
   import { useCloudflareApi } from '@/api/app';
   import { DOWNLOAD_TARGET_OPTIONS } from '@/constants/subscriptionTargets';
   import { useI18n } from 'vue-i18n';
+  import { BrowseIcon, FileCopyIcon, HelpCircleIcon } from 'tdesign-icons-vue-next';
+  import { Button as TButton } from 'tdesign-vue-next';
 
   const settingsStore = useSettingsStore();
   const { appearanceSetting } = storeToRefs(settingsStore);
@@ -63,7 +60,6 @@
   const { t } = useI18n();
   const { copy, isSupported } = useClipboard();
   const { toClipboard: copyFallback } = useV3Clipboard();
-  const { showNotify } = useAppNotifyStore();
   const {
     name,
     displayName,
@@ -156,13 +152,17 @@
     window.open(nextUrl, '_blank');
   };
   const targetCopy = async (path: PlatformPath) => {
-    const url = await getRealUrl(path);
-    if (isSupported) {
-      await copy(url);
-    } else {
-      await copyFallback(url);
+    try {
+      const url = await getRealUrl(path);
+      if (isSupported) {
+        await copy(url);
+      } else {
+        await copyFallback(url);
+      }
+      showNotify({ type: 'success', title: notify });
+    } catch (error) {
+      showNotify({ type: 'danger', title: error instanceof Error ? error.message : String(error) });
     }
-    showNotify({ title: notify });
   };
   const platformList = [
     {
@@ -206,7 +206,7 @@
       justify-content: space-between;
 
       &:not(:last-child) {
-        border-bottom: 1px solid var(--divider-color);
+        border-bottom: 1px solid var(--td-component-stroke);
       }
 
       .infos {
@@ -223,7 +223,7 @@
 
         p {
           font-size: 14px;
-          color: var(--second-text-color);
+          color: var(--td-text-color-primary);
         }
       }
 
@@ -237,12 +237,11 @@
         gap: 16px;
         font-size: 20px;
 
-        > button {
-          background-color: transparent;
-          border: none;
-          padding: 0;
-          cursor: pointer;
+        .action-icon {
+          color: var(--td-text-color-secondary);
         }
+
+        :deep(.t-button) { color: var(--td-text-color-secondary); }
       }
     }
   }

@@ -1,0 +1,141 @@
+.subscription-item {
+  min-inline-size: 0;
+}
+
+.subscription-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--td-bg-color-container);
+  border: 1px solid var(--td-component-stroke);
+}
+
+.subscription-preview-trigger {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.subscription-preview-trigger:focus-visible {
+  outline: 2px solid var(--td-brand-color);
+  outline-offset: -2px;
+}
+
+.subscription-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-inline-size: 0;
+  align-items: flex-start;
+  gap: var(--app-space-standard);
+  pointer-events: none;
+}
+
+.subscription-content :deep(button) {
+  pointer-events: auto;
+}
+
+.subscription-avatar-button {
+  flex: 0 0 auto;
+  inline-size: auto;
+  block-size: auto;
+  padding: 0;
+}
+
+.subscription-avatar {
+  flex: 0 0 auto;
+}
+
+.subscription-copy {
+  min-inline-size: 0;
+  flex: 1;
+}
+
+.subscription-heading {
+  display: flex;
+  min-inline-size: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-compact);
+}
+
+.subscription-heading h3 {
+  min-inline-size: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--td-text-color-primary);
+  font-size: var(--td-font-size-body-large);
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subscription-detail {
+  margin: var(--app-space-compact) 0 0;
+  overflow: hidden;
+  color: var(--td-text-color-secondary);
+  font-size: var(--td-font-size-body-small);
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.secondary {
+  color: var(--td-text-color-placeholder);
+}
+
+.primary-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.secondary-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-compact);
+  margin-top: var(--app-space-standard);
+}
+
+.progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  opacity: 0.12;
+  background: var(--td-brand-color);
+  pointer-events: none;
+}
+
+.is-dual-column .subscription-content {
+  gap: var(--app-space-compact);
+}
+
+.is-dual-column .primary-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 767px) {
+  .subscription-content {
+    align-items: flex-start;
+  }
+
+  .subscription-heading h3 {
+    max-inline-size: 100%;
+  }
+
+  .primary-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .subscription-avatar-button {
+    display: none;
+  }
+}

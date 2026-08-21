@@ -1,0 +1,47 @@
+.list-group {
+  display: grid;
+  gap: var(--app-space-standard);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.list-group-item :deep(.t-card__body) {
+  padding: var(--app-space-standard);
+}
+.list-group-item-title,
+.title-text,
+.action-controls {
+  align-items: center;
+  display: flex;
+  gap: var(--app-space-compact);
+  min-inline-size: 0;
+}
+.list-group-item-title {
+  border-bottom: 1px solid var(--td-component-stroke);
+  justify-content: space-between;
+  margin-bottom: var(--app-space-standard);
+  padding-bottom: var(--app-space-standard);
+}
+.title-text {
+  flex: 1;
+}
+.title-text :deep(.t-input) {
+  flex: 1;
+  min-inline-size: 0;
+}
+.action-controls {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 479px) {
+  .list-group-item-title {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .action-controls {
+    justify-content: flex-start;
+  }
+  .action-controls :deep(.t-switch) {
+    max-inline-size: 100%;
+  }
+}

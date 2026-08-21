@@ -1,378 +1,155 @@
 <template>
-  <div class="form-block-wrapper">
-    <div class="sticky-title-wrapper">
-      <div class="common-title-row">
-        <div class="title" @click="toggleFold">
-          <p>
-            {{ $t(`editorPage.subConfig.commonOptions.label`) }}
-          </p>
-          <nut-icon v-if="!isFold" name="rect-down" size="12px"></nut-icon>
-          <nut-icon v-else name="rect-right" size="12px"></nut-icon>
-        </div>
-        <EditorCommonTips />
-      </div>
-    </div>
-    <nut-form v-if="!isFold" class="form common-options-form">
+  <section class="form-block-wrapper">
+    <header class="sticky-title-wrapper common-title-row">
+      <button class="title" type="button" @click="toggleFold">
+        <p>{{ t("editorPage.subConfig.commonOptions.label") }}</p>
+        <ChevronRightIcon v-if="isFold" /><ChevronDownIcon v-else /></button
+      ><EditorCommonTips />
+    </header>
+    <TForm v-if="!isFold" class="form common-options-form" layout="inline">
       <div class="quick-option-palette">
-        <button
-          v-for="option in quickOptions"
+        <TButton
+          v-for="option in options"
           :key="option.key"
-          type="button"
-          class="quick-option-chip"
-          :class="{ 'quick-option-chip--active': isConfigured(option.key) }"
-          @click="toggleQuickOption(option.key)"
+          size="small"
+          :variant="configured(option) ? 'base' : 'outline'"
+          @click="toggle(option)"
+          >{{
+            t(`editorPage.subConfig.commonOptions${option.path}.label`)
+          }}</TButton
         >
-          {{ $t(`editorPage.subConfig.commonOptions${option.localePath}.label`) }}
-        </button>
       </div>
-
-      <nut-form-item
-        v-for="option in configuredQuickOptions"
+      <TFormItem
+        v-for="option in configuredOptions"
         :key="option.key"
         class="configured-option-item"
-      >
-        <p class="options-label configured-option-label">
-          {{ $t(`editorPage.subConfig.commonOptions${option.localePath}.label`) }}
+        ><p class="options-label">
+          {{ t(`editorPage.subConfig.commonOptions${option.path}.label`) }}
         </p>
-        <div class="radio-wrapper options-radio configured-option-control">
-          <nut-radiogroup
-            direction="horizontal"
-            v-model="quickArgs[option.key]"
-          >
-            <nut-radio
-              v-for="radioOption in getRadioOptions(option)"
-              :key="radioOption.value"
-              :label="radioOption.value"
-            >
-              {{ $t(`editorPage.subConfig.commonOptions${option.localePath}.${radioOption.labelKey}`) }}
-            </nut-radio>
-          </nut-radiogroup>
-        </div>
-        <button
-          type="button"
-          class="quick-option-remove"
-          :aria-label="$t('editorPage.subConfig.pop.deleteConfirm')"
-          @click="removeQuickOption(option.key)"
-        >
-          <nut-icon name="mask-close" />
-        </button>
-      </nut-form-item>
-    </nut-form>
-  </div>
-  <!--<div class="form-block-wrapper">-->
-  <!--  <div class="sticky-title-wrapper">-->
-  <!--    <p>-->
-  <!--      {{ $t(`editorPage.subConfig.surgeOptions.label`) }}-->
-  <!--    </p>-->
-  <!--  </div>-->
-  <!--  <nut-form class="form">-->
-  <!--    <nut-form-item>-->
-  <!--      <p class="options-label">-->
-  <!--        {{ $t(`editorPage.subConfig.surgeOptions.hybrid.label`) }}-->
-  <!--      </p>-->
-  <!--      <div class="radio-wrapper options-radio">-->
-  <!--        <nut-radiogroup-->
-  <!--          direction="horizontal"-->
-  <!--          v-model="options['surge-hybrid']"-->
-  <!--        >-->
-  <!--          <nut-radio label="DEFAULT"-->
-  <!--            >{{ $t(`editorPage.subConfig.surgeOptions.hybrid.default`) }}-->
-  <!--          </nut-radio>-->
-  <!--          <nut-radio label="FORCE_OPEN"-->
-  <!--            >{{ $t(`editorPage.subConfig.surgeOptions.hybrid.open`) }}-->
-  <!--          </nut-radio>-->
-  <!--          <nut-radio label="FORCE_CLOSE"-->
-  <!--            >{{ $t(`editorPage.subConfig.surgeOptions.hybrid.close`) }}-->
-  <!--          </nut-radio>-->
-  <!--        </nut-radiogroup>-->
-  <!--      </div>-->
-  <!--    </nut-form-item>-->
-  <!--  </nut-form>-->
-  <!--</div>-->
+        <TRadioGroup v-model="args[option.key]"
+          ><TRadio
+            v-for="radio in radioOptions(option)"
+            :key="radio.value"
+            :value="radio.value"
+            >{{
+              t(
+                `editorPage.subConfig.commonOptions${option.path}.${radio.label}`,
+              )
+            }}</TRadio
+          ></TRadioGroup
+        ><TButton
+          :aria-label="t('editorPage.subConfig.pop.deleteConfirm')"
+          shape="circle"
+          size="small"
+          theme="danger"
+          variant="text"
+          @click="remove(option)"
+          ><CloseIcon /></TButton
+      ></TFormItem>
+    </TForm>
+  </section>
 </template>
-
-<script lang="ts" setup>
-  import EditorCommonTips from '@/components/EditorCommonTips.vue';
-  import { useRoute } from 'vue-router';
-  import { computed, inject, watchEffect, ref, watch } from 'vue';
-  import {
-    getEditorFoldState,
-    getEditorIsFolded,
-    setEditorFoldState,
-  } from '@/utils/editorFoldState';
-  const route = useRoute();
-  const props = withDefaults(defineProps<{
-    defaultFolded?: boolean
-  }>(), {
-    defaultFolded: false,
-  });
-
-  const storageKey = 'common-block-fold';
-
-  function getFoldState() {
-    return getEditorIsFolded(storageKey, route.path, props.defaultFolded);
-  }
-  function setFoldState(isFold) {
-    setEditorFoldState(storageKey, route.path, isFold);
-  }
-  const isFold = ref(getFoldState());
-
-  type QuickOptionKey =
-    | 'useless'
-    | 'udp'
-    | 'scert'
-    | 'tfo'
-    | 'vmess aead';
-  type QuickOptionRadio = {
-    value: string;
-    labelKey: string;
-  };
-  type QuickOption = {
-    key: QuickOptionKey;
-    localePath: string;
-    emptyValue: string;
-    defaultValue?: string;
-    radioOptions?: QuickOptionRadio[];
-  };
-
-  const quickOptions: QuickOption[] = [
-    {
-      key: 'useless',
-      localePath: '.useless',
-      emptyValue: 'DISABLED',
-      radioOptions: [
-        { value: 'DISABLED', labelKey: 'disabled' },
-        { value: 'ENABLED', labelKey: 'enabled' },
-      ],
-    },
-    { key: 'udp', localePath: '.udp', emptyValue: 'DEFAULT' },
-    { key: 'scert', localePath: '.scert', emptyValue: 'DEFAULT' },
-    { key: 'tfo', localePath: '.tfo', emptyValue: 'DEFAULT' },
-    { key: 'vmess aead', localePath: "['vmess aead']", emptyValue: 'DEFAULT' },
-  ];
-  const defaultRadioOptions: QuickOptionRadio[] = [
-    { value: 'ENABLED', labelKey: 'enabled' },
-    { value: 'DISABLED', labelKey: 'disabled' },
-  ];
-  const createDefaultQuickArgs = () => ({
-    useless: 'DISABLED',
-    udp: 'DEFAULT',
-    scert: 'DEFAULT',
-    tfo: 'DEFAULT',
-    'vmess aead': 'DEFAULT',
-  });
-
-  const form = inject<Sub | Collection>('form');
-  const quickSettingType = 'Quick Setting Operator';
-  const getQuickSetting = () => {
-    if (!Array.isArray(form.process)) {
-      form.process = [];
-    }
-
-    let operator = form.process.find(item => item.type === quickSettingType);
-    if (!operator) {
-      form.process.unshift({
-        type: quickSettingType,
-        args: createDefaultQuickArgs(),
-      });
-      operator = form.process.find(item => item.type === quickSettingType);
-    }
-
-    return operator;
-  };
-  const getQuickOption = (key: QuickOptionKey) => quickOptions.find(item => item.key === key);
-  const getRadioOptions = (option: QuickOption) => option.radioOptions || defaultRadioOptions;
-  const ensureQuickArgs = () => {
-    const quick = getQuickSetting();
-    const defaults = createDefaultQuickArgs();
-    if (!quick.args || typeof quick.args !== 'object') {
-      quick.args = defaults;
-    }
-
-    Object.entries(defaults).forEach(([key, value]) => {
-      if (!quick.args[key]) {
-        quick.args[key] = value;
-      }
-    });
-
-    return quick.args as Record<QuickOptionKey, string>;
-  };
-  const quickArgs = computed(() => ensureQuickArgs());
-  ensureQuickArgs();
-
-  const isConfigured = (key: QuickOptionKey) => {
-    const option = getQuickOption(key);
-    if (!option) return false;
-
-    const value = ensureQuickArgs()[key];
-    return Boolean(value) && value !== option.emptyValue;
-  };
-  const configuredQuickOptions = computed(() => quickOptions.filter(option => isConfigured(option.key)));
-  const addQuickOption = (key: QuickOptionKey) => {
-    const args = ensureQuickArgs();
-    if (isConfigured(key)) return;
-
-    args[key] = getQuickOption(key)?.defaultValue || 'ENABLED';
-  };
-  const removeQuickOption = (key: QuickOptionKey) => {
-    const option = getQuickOption(key);
-    if (!option) return;
-
-    ensureQuickArgs()[key] = option.emptyValue;
-  };
-  const toggleQuickOption = (key: QuickOptionKey) => {
-    if (isConfigured(key)) {
-      removeQuickOption(key);
-      return;
-    }
-
-    addQuickOption(key);
-  };
-  const toggleFold = () => {
-    isFold.value = !isFold.value;
-    setFoldState(isFold.value)
-  };
-  watch(
-    () => props.defaultFolded,
-    (defaultFolded) => {
-      if (getEditorFoldState(storageKey, route.path) === undefined) {
-        isFold.value = defaultFolded;
-      }
-    },
+<script setup lang="ts">
+import EditorCommonTips from "@/components/EditorCommonTips.vue";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  CloseIcon,
+} from "tdesign-icons-vue-next";
+import { computed, inject, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
+import {
+  getEditorFoldState,
+  getEditorIsFolded,
+  setEditorFoldState,
+} from "@/utils/editorFoldState";
+type Key = "useless" | "udp" | "scert" | "tfo" | "vmess aead";
+type Option = {
+  readonly key: Key;
+  readonly path: string;
+  readonly empty: string;
+  readonly initial?: string;
+  readonly radios?: readonly {
+    readonly value: string;
+    readonly label: string;
+  }[];
+};
+const props = withDefaults(defineProps<{ defaultFolded?: boolean }>(), {
+  defaultFolded: false,
+});
+const { t } = useI18n();
+const route = useRoute();
+const form = inject<Sub | Collection>("form");
+const foldKey = "common-block-fold";
+const options: readonly Option[] = [
+  {
+    key: "useless",
+    path: ".useless",
+    empty: "DISABLED",
+    radios: [
+      { value: "DISABLED", label: "disabled" },
+      { value: "ENABLED", label: "enabled" },
+    ],
+  },
+  { key: "udp", path: ".udp", empty: "DEFAULT" },
+  { key: "scert", path: ".scert", empty: "DEFAULT" },
+  { key: "tfo", path: ".tfo", empty: "DEFAULT" },
+  { key: "vmess aead", path: "['vmess aead']", empty: "DEFAULT" },
+];
+const defaults = (): Record<Key, string> => ({
+  useless: "DISABLED",
+  udp: "DEFAULT",
+  scert: "DEFAULT",
+  tfo: "DEFAULT",
+  "vmess aead": "DEFAULT",
+});
+const getOperator = () => {
+  const existing = form.process.find(
+    (item) => item.type === "Quick Setting Operator",
   );
-  watchEffect(() => {
-    ensureQuickArgs();
-  });
+  if (existing) return existing;
+  const created = { type: "Quick Setting Operator", args: defaults() };
+  form.process.unshift(created);
+  return created;
+};
+const ensureArgs = (): Record<Key, string> => {
+  const operator = getOperator();
+  if (!operator.args || typeof operator.args !== "object")
+    operator.args = defaults();
+  const values = operator.args as Record<Key, string>;
+  for (const [name, value] of Object.entries(defaults()))
+    if (!values[name as Key]) values[name as Key] = value;
+  return values;
+};
+const args = computed(ensureArgs);
+const isFold = ref(getEditorIsFolded(foldKey, route.path, props.defaultFolded));
+const configured = (option: Option): boolean =>
+  args.value[option.key] !== option.empty;
+const configuredOptions = computed(() => options.filter(configured));
+const radioOptions = (option: Option) =>
+  option.radios ?? [
+    { value: "ENABLED", label: "enabled" },
+    { value: "DISABLED", label: "disabled" },
+  ];
+const remove = (option: Option): void => {
+  args.value[option.key] = option.empty;
+};
+const toggle = (option: Option): void => {
+  args.value[option.key] = configured(option)
+    ? option.empty
+    : (option.initial ?? "ENABLED");
+};
+const toggleFold = (): void => {
+  isFold.value = !isFold.value;
+  setEditorFoldState(foldKey, route.path, isFold.value);
+};
+watch(
+  () => props.defaultFolded,
+  (value) => {
+    if (getEditorFoldState(foldKey, route.path) === undefined)
+      isFold.value = value;
+  },
+);
 </script>
-
-<style lang="scss" scoped>
-  .form-block-wrapper {
-    .sticky-title-wrapper {
-      .common-title-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-      }
-
-      .title {
-        display: flex;
-        flex: 1;
-        justify-content: flex-start;
-        align-items: center;
-        min-width: 0;
-        cursor: pointer;
-        p {
-          margin-right: 6px;
-        }
-        :deep(.nut-icon) {
-          // transform: rotate(270deg);
-          font-size: 12px;
-          height: 12px;
-        }
-      }
-    }
-  }
-  .options-label {
-    font-size: 12px;
-    margin: 0 0 16px;
-    color: var(--comment-text-color);
-  }
-
-  .quick-option-palette {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    padding: 14px 16px;
-  }
-
-  .quick-option-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    height: 30px;
-    padding: 0 9px;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    background: var(--divider-color);
-    color: var(--second-text-color);
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: normal;
-    line-height: 18px;
-    white-space: nowrap;
-
-    &--active {
-      border-color: var(--primary-color);
-      background: transparent;
-      color: var(--primary-color);
-    }
-  }
-
-  .configured-option-item {
-    :deep(.nut-form-item__body__slots) {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto 22px;
-      align-items: center;
-      column-gap: 12px;
-      width: 100%;
-    }
-  }
-
-  .configured-option-label {
-    min-width: 0;
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .configured-option-control {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    justify-self: end;
-    min-width: 0;
-  }
-
-  .quick-option-remove {
-    display: inline-flex;
-    width: 22px;
-    height: 22px;
-    align-items: center;
-    justify-content: center;
-    justify-self: end;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--lowest-text-color);
-    cursor: pointer;
-    opacity: 0.72;
-
-    &:hover {
-      color: var(--danger-color);
-      opacity: 1;
-    }
-
-    :deep(.nut-icon) {
-      font-size: 14px;
-    }
-  }
-
-  .radio-wrapper.options-radio {
-    :deep(.nut-radiogroup) {
-      width: auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    :deep(.nut-radio) {
-      display: inline-flex;
-      align-items: center;
-      margin: 0;
-      line-height: 1;
-    }
-  }
-</style>
+<style src="./CommonBlock.scss" lang="scss" scoped />
