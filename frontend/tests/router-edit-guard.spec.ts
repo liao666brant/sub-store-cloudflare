@@ -36,7 +36,8 @@ describe("editor route existence guard", () => {
 
     // Then: the guard checked the source endpoint before redirecting.
     expect(getOne).toHaveBeenCalledWith("sub", "missing-source");
-  });
+    // 动态导入 @/router 会拉起完整视图依赖，冷启动可超过 Vitest 默认 5s。
+  }, 20000);
 
   it("allows untitled editor records without issuing a lookup", async () => {
     // Given: the built-in untitled source editor route.
@@ -50,5 +51,5 @@ describe("editor route existence guard", () => {
     // Then: no existence request is made and the editor route remains active.
     expect(router.currentRoute.value.fullPath).toBe("/edit/subs/UNTITLED");
     expect(getOne).not.toHaveBeenCalled();
-  });
+  }, 20000);
 });

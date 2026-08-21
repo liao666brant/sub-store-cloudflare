@@ -98,6 +98,38 @@ for (const viewport of viewports) {
   });
 }
 
+for (const viewport of viewports) {
+  test(`main content keeps a working vertical scroll owner at ${viewport}px`, async ({ page }) => {
+    await installApiMocks(page);
+    await page.setViewportSize({ width: viewport, height: 900 });
+    await page.goto("/subs");
+    await expect(page.locator(".subscriptions-page")).toBeVisible();
+
+    // Given: tall content inside the page-level scroll owner (.app-layout-wrapper).
+    await page.evaluate(() => {
+      const probe = document.createElement("div");
+      probe.id = "scroll-reach-probe";
+      probe.style.height = "3000px";
+      document.querySelector(".subscriptions-page")!.appendChild(probe);
+    });
+
+    // When: the scroll owner scrolls to the bottom.
+    const reachedBottom = await page.evaluate(async () => {
+      const owner = document.querySelector(".app-layout-wrapper") as HTMLElement;
+      owner.scrollTo({ top: owner.scrollHeight });
+      await new Promise(resolve => setTimeout(resolve, 50));
+      return owner.scrollTop + owner.clientHeight >= owner.scrollHeight - 1;
+    });
+
+    // Then: the bottom is reachable through the page owner, not the window.
+    expect(reachedBottom).toBe(true);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+    await page.evaluate(() => document.getElementById("scroll-reach-probe")?.remove());
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  });
+}
+
 test("shell applies the persisted dark theme", async ({ page }) => {
   await installApiMocks(page);
   await page.route("**/api/settings", route => route.fulfill({
