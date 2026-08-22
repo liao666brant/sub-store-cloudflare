@@ -37,7 +37,7 @@ const { t } = useI18n();
   display: flex;
   justify-content: space-between;
   width: 100%;
-  padding: 8px var(--safe-area-side);
+  padding: 8px var(--app-space-inline-safe, 16px);
   background: var(--background-color);
   border-top: 1px solid var(--divider-color);
 

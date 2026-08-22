@@ -158,7 +158,7 @@ const handleKeyBlur = (item: ParamItem, _index: number): void => {
 
 <style lang="scss" scoped>
 .key-value-container {
-  border-radius: var(--item-card-radios);
+  border-radius: var(--td-radius-default, 12px);
   overflow: hidden;
   .key-value-box {
     .header {

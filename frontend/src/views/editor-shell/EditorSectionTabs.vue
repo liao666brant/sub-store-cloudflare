@@ -46,7 +46,7 @@ const emit = defineEmits<{
   align-items: center;
   justify-content: space-between;
   gap: var(--app-space-control);
-  padding: var(--app-space-compact) var(--safe-area-side);
+  padding: var(--app-space-compact) var(--app-space-inline-safe, 16px);
   background: var(--background-color);
 }
 

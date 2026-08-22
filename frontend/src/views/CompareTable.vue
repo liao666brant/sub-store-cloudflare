@@ -2,7 +2,7 @@
   <Teleport to="#app">
     <main class="compare-page compare-page-wrapper">
       <header class="compare-header compare-page-header">
-        <div>
+        <div class="btn-groups preview-leading">
           <TButton class="close" variant="text" shape="square" :aria-label="$t('navBar.listSearch.close')" @click="emit('closeCompare')">
             <template #icon>
               <CloseIcon />
@@ -29,7 +29,7 @@
             <TButton size="small" variant="outline" :disabled="!hasOriginal" :aria-pressed="originalVisible" @click="toggleOriginal">
               {{ $t("comparePage.remain.beforeIndicator") }}
             </TButton>
-            <TButton size="small" variant="text" :disabled="!hasOriginal" @click="openNames('before')">
+            <TButton class="node-names-action" size="small" variant="text" :disabled="!hasOriginal" @click="openNames('before')">
               <template #icon>
                 <FileCopyIcon />
               </template>
@@ -38,7 +38,7 @@
             <TButton size="small" variant="outline" :disabled="!hasProcessed" :aria-pressed="processedVisible" @click="toggleProcessed">
               {{ $t("comparePage.remain.afterIndicator") }}
             </TButton>
-            <TButton size="small" variant="text" :disabled="!hasProcessed" @click="openNames('after')">
+            <TButton class="node-names-action" size="small" variant="text" :disabled="!hasProcessed" @click="openNames('after')">
               <template #icon>
                 <FileCopyIcon />
               </template>

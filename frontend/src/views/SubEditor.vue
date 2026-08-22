@@ -8,7 +8,3 @@ import { useEditorRouteController } from "@/views/editor-shell/useEditorRouteCon
 
 const controller = useEditorRouteController();
 </script>
-
-<style lang="scss" scoped>
-@import "./editor-shell/sub-editor-chrome";
-</style>

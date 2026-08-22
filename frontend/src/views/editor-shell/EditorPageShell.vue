@@ -126,3 +126,7 @@ import { useEditorRouteController } from "@/views/editor-shell/useEditorRouteCon
 
 defineProps<{ readonly controller: ReturnType<typeof useEditorRouteController> }>();
 </script>
+
+<style lang="scss" scoped>
+@import "./sub-editor-chrome";
+</style>

@@ -45,7 +45,7 @@
           {{ item.label }}
         </TButton>
       </nav>
-      <div class="subs-list-container" :style="{ paddingTop: `${tagBarHeight}px` }">
+      <div class="subs-list-container">
         <SubscriptionListSection
           v-model:items="filteredSubs"
           kind="sub"
@@ -149,7 +149,6 @@ const {
   subs,
   t,
   tag,
-  tagBarHeight,
   tagBarRef,
   tags,
   toggleFold,
@@ -175,11 +174,13 @@ const {
 }
 
 .tag-bar {
-  position: fixed;
+  position: sticky;
+  top: 0;
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
   width: min(100%, 900px);
+  margin-inline: auto;
   gap: 6px;
   padding: 12px 16px;
   background: var(--td-bg-color-container);

@@ -146,7 +146,7 @@
         margin: 10px -15px 12px;
         padding: 10px 12px;
         border: 1px solid var(--divider-color);
-        border-radius: var(--item-card-radios);
+        border-radius: var(--td-radius-default, 12px);
         background: var(--card-color);
         color: var(--second-text-color);
         font-size: 12px;
@@ -190,7 +190,7 @@
     .local-code-editor {
         max-height: 60vh;
         min-width: 0;
-        margin-inline: calc(-1 * var(--safe-area-side));
+        margin-inline: calc(-1 * var(--app-space-inline-safe, 16px));
         overflow: auto;
 
         :deep(.cmviewRef),

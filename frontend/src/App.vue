@@ -96,6 +96,11 @@ watchEffect(() => {
   overflow: hidden;
 }
 
+.page-body > * {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .page-body .editor-section-tabs {
   position: sticky;
   inset-inline: 0;
