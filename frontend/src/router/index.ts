@@ -111,6 +111,15 @@ const router = createRouter({
           },
         },
         {
+          path: '/config',
+          component: () => import('@/views/Config.vue'),
+          meta: {
+            title: 'config',
+            needTabBar: true,
+            needNavBack: false,
+          },
+        },
+        {
           path: '/preview',
           component: () => import('@/views/Preview.vue'),
           meta: {

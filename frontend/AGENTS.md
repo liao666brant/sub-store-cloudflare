@@ -10,7 +10,7 @@ Vue 3 + Vite 管理界面：认证 token 的浏览器侧保存、订阅源与集
 
 - 浏览器入口：`src/main.ts`；启动时从 URL 同步管理 token，注册 Pinia、Vue Router、i18n、NutUI 和全局样式。
 - 根组件：`src/App.vue`；初始化 stores，渲染导航、侧边栏与路由视图。
-- 路由：`src/router/index.ts`；`/subs`、`/my`、`/tools`、`/preview`、`/edit/:editType(subs|collections)/:id` 与兜底 404。
+- 路由：`src/router/index.ts`；`/subs`、`/my`、`/tools`、`/config`、`/preview`、`/edit/:editType(subs|collections)/:id` 与兜底 404。
 - 开发与构建：`pnpm --dir frontend run dev`、`pnpm --dir frontend run build`；根构建命令为 `pnpm run build:frontend`。
 
 ## 对外接口
@@ -48,7 +48,7 @@ Vue 3 + Vite 管理界面：认证 token 的浏览器侧保存、订阅源与集
 - `frontend/src/main.ts`、`frontend/src/App.vue`、`frontend/src/router/index.ts`：应用启动与路由边界。
 - `frontend/src/api/index.ts`、`frontend/src/api/app/index.ts`：请求基础设施与 Worker API 封装。
 - `frontend/src/store/subs.ts`、`frontend/src/hooks/useBackend.ts`：核心业务状态与后端选择。
-- `frontend/src/views/Sub.vue`、`frontend/src/views/SubEditor.vue`、`frontend/src/views/Tools.vue`：主要业务视图。
+- `frontend/src/views/Sub.vue`、`frontend/src/views/SubEditor.vue`、`frontend/src/views/Tools.vue`、`frontend/src/views/Config.vue`（配置模板页）：主要业务视图。
 - `frontend/src/locales/zh.ts`、`frontend/src/locales/en.ts`、`frontend/scripts/check-locales.mjs`：国际化事实源和校验。
 
 ## 精简变更记录

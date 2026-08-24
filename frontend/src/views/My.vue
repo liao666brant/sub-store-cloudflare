@@ -45,42 +45,6 @@
     </section>
 
     <section class="config-card">
-      <div class="title-wrapper">
-        <h1>{{ t("myPage.templates.title") }}</h1>
-        <div class="storage-actions">
-          <input ref="templateFileInput" type="file" accept="application/json,.json,.yaml,.yml,text/yaml" @change="importTemplateFromFile" />
-          <nut-button plain type="primary" size="small" :loading="templateImporting" @click="selectTemplateFile">
-            <font-awesome-icon v-if="!templateImporting" icon="fa-solid fa-file-import" />
-            {{ t("myPage.templates.importFile") }}
-          </nut-button>
-          <nut-button type="primary" size="small" :loading="templateImporting" @click="openTemplateImport">
-            <font-awesome-icon v-if="!templateImporting" icon="fa-solid fa-plus" />
-            {{ t("myPage.templates.create") }}
-          </nut-button>
-        </div>
-      </div>
-      <div class="template-list">
-        <div v-for="template in templates" :key="template.name" class="template-item">
-          <div class="template-text">
-            <span class="template-title">{{ template.displayName || template.name }}</span>
-            <span class="template-meta">
-              {{ template.readonly ? t("myPage.templates.builtIn") : t("myPage.templates.custom") }}
-              · {{ getTargetLabel(template.target || "mihomo") }}
-            </span>
-          </div>
-          <div class="template-actions">
-            <nut-button v-if="!template.readonly" plain type="primary" size="mini" @click="openTemplateEdit(template)">
-              {{ t("myPage.btn.edit") }}
-            </nut-button>
-            <nut-button v-if="!template.readonly" plain type="danger" size="mini" @click="deleteCustomTemplate(template.name)">
-              {{ t("myPage.btn.delete") }}
-            </nut-button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="config-card">
       <div class="title-wrapper" @click="requestEditing ? cancelRequestEdit() : startRequestEdit()">
         <h1>{{ t("myPage.request.title") }}</h1>
         <div class="config-btn-wrapper">
@@ -112,82 +76,31 @@
       </div>
       <p v-else class="card-desc">{{ requestSummary }}</p>
     </section>
-
-    <nut-popup v-model:visible="templateImportVisible" position="bottom" round closeable :style="{ height: '82vh' }">
-      <div class="template-import-panel">
-        <h2>{{ templateEditingId ? t("myPage.templates.editTitle") : t("myPage.templates.importTitle") }}</h2>
-        <nut-input class="input" v-model.trim="templateForm.id" :placeholder="t('myPage.templates.idPlaceholder')" input-align="left" :disabled="Boolean(templateEditingId)" />
-        <nut-input class="input" v-model.trim="templateForm.name" :placeholder="t('myPage.templates.namePlaceholder')" input-align="left" />
-        <nut-cell class="template-target-trigger" @click="openTemplateTargetPicker">
-          <view class="nut-cell__title">{{ t("myPage.templates.target") }}</view>
-          <view class="nut-cell__value">
-            <nut-input
-              :model-value="templateTargetLabel"
-              :border="false"
-              readonly
-              input-align="right"
-              right-icon="rect-right"
-              @click-right-icon.stop="openTemplateTargetPicker"
-            />
-          </view>
-        </nut-cell>
-        <div class="template-content-editor">
-          <CmView v-if="templateImportVisible" :is-read-only="false" id="TemplateEditor" />
-        </div>
-        <nut-button block type="primary" :loading="templateImporting" @click="saveTemplate">
-          {{ t("myPage.templates.save") }}
-        </nut-button>
-      </div>
-    </nut-popup>
-    <DesktopPicker
-      v-model="selectedTemplateTargetValue"
-      v-model:visible="templateTargetPickerVisible"
-      :columns="templateTargetColumns"
-      :title="t('myPage.templates.targetPickerTitle')"
-      :cancel-text="t('myPage.btn.cancel')"
-      :ok-text="t('specificWord.confirm')"
-      @confirm="handleTemplateTargetConfirm"
-    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, defineAsyncComponent, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { Dialog } from "@nutui/nutui";
 import { useI18n } from "vue-i18n";
 
-import { useCloudflareApi } from "@/api/app";
 import LanguageSwitcherButton from "@/components/LanguageSwitcherButton.vue";
-import DesktopPicker from "@/components/DesktopPicker.vue";
 import { useSettingsApi } from "@/api/settings";
 import { useBackend } from "@/hooks/useBackend";
 import { useAppNotifyStore } from "@/store/appNotify";
-import { useCodeStore } from "@/store/codeStore";
 import { useSettingsStore } from "@/store/settings";
-import { TEMPLATE_TARGET_OPTIONS, getTargetLabel } from "@/constants/subscriptionTargets";
-
-const CmView = defineAsyncComponent(() => import("@/views/editCode/cmView.vue"));
 
 const settingsStore = useSettingsStore();
 const settingsApi = useSettingsApi();
-const cloudflareApi = useCloudflareApi();
-const cmStore = useCodeStore();
 const { showNotify } = useAppNotifyStore();
 const { t } = useI18n();
 const { icon, env } = useBackend();
-const TEMPLATE_EDITOR_ID = "TemplateEditor";
 
 const fileInput = ref<HTMLInputElement | null>(null);
-const templateFileInput = ref<HTMLInputElement | null>(null);
 const restoreIsLoading = ref(false);
 const exportIsLoading = ref(false);
 const requestEditing = ref(false);
 const requestSaving = ref(false);
-const templateImporting = ref(false);
-const templateImportVisible = ref(false);
-const templateEditingId = ref("");
-const templateTargetPickerVisible = ref(false);
-const templates = ref<any[]>([]);
 
 const requestForm = reactive({
   defaultUserAgent: "",
@@ -198,21 +111,6 @@ const requestForm = reactive({
   remoteCacheTtl: "",
   remoteCacheStaleOnError: true,
   nodeInfoApiUrl: "",
-});
-const templateForm = reactive({
-  id: "",
-  name: "",
-  target: "mihomo",
-});
-const selectedTemplateTargetValue = ref<string[]>([]);
-const templateTargetColumns = computed(() => {
-  return TEMPLATE_TARGET_OPTIONS.map((option) => ({
-    text: option.label,
-    value: option.value,
-  }));
-});
-const templateTargetLabel = computed(() => {
-  return getTargetLabel(templateForm.target);
 });
 const appName = computed(() => {
   return env.value?.app
@@ -278,108 +176,6 @@ const exportBackup = async () => {
   }
 };
 
-const fetchTemplates = async () => {
-  const res = await cloudflareApi.getTemplates();
-  if (res?.data?.status === "success" && Array.isArray(res.data.data)) {
-    templates.value = res.data.data;
-  }
-};
-
-const selectTemplateFile = () => {
-  templateFileInput.value?.click();
-};
-
-const openTemplateImport = () => {
-  templateEditingId.value = "";
-  templateForm.id = "";
-  templateForm.name = "";
-  templateForm.target = "mihomo";
-  cmStore.setEditCode(TEMPLATE_EDITOR_ID, "");
-  templateImportVisible.value = true;
-};
-
-const openTemplateEdit = (template: any) => {
-  templateEditingId.value = template.name;
-  templateForm.id = template.name;
-  templateForm.name = template.displayName || template.name;
-  templateForm.target = template.target || "mihomo";
-  cmStore.setEditCode(TEMPLATE_EDITOR_ID, JSON.stringify(template.config || {}, null, 2));
-  templateImportVisible.value = true;
-};
-
-const importTemplateFromFile = async (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  target.value = "";
-  if (!file) return;
-
-  templateEditingId.value = "";
-  templateForm.id = file.name.replace(/\.(json|ya?ml)$/i, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
-  templateForm.name = file.name.replace(/\.(json|ya?ml)$/i, "");
-  templateForm.target = "mihomo";
-  cmStore.setEditCode(TEMPLATE_EDITOR_ID, await file.text());
-  templateImportVisible.value = true;
-};
-
-const openTemplateTargetPicker = () => {
-  selectedTemplateTargetValue.value = [templateForm.target || "mihomo"];
-  templateTargetPickerVisible.value = true;
-};
-
-const handleTemplateTargetConfirm = ({ selectedValue }) => {
-  templateForm.target = selectedValue?.[0] || "mihomo";
-  selectedTemplateTargetValue.value = [templateForm.target];
-  templateTargetPickerVisible.value = false;
-};
-
-const saveTemplate = async () => {
-  const content = String(cmStore.EditCode[TEMPLATE_EDITOR_ID] || "");
-  if (!templateForm.id || !content.trim()) {
-    showNotify({ type: "danger", title: t("myPage.templates.validationRequired") });
-    return;
-  }
-
-  templateImporting.value = true;
-  try {
-    const payload = {
-      id: templateForm.id,
-      name: templateForm.name || templateForm.id,
-      target: templateForm.target,
-      content,
-    };
-    const res = templateEditingId.value
-      ? await cloudflareApi.updateTemplate(templateEditingId.value, payload)
-      : await cloudflareApi.createTemplate(payload);
-    if (res?.data?.status !== "success") throw new Error("import failed");
-    await fetchTemplates();
-    templateImportVisible.value = false;
-    templateEditingId.value = "";
-    showNotify({ type: "success", title: t("myPage.templates.saveSucceed") });
-  } catch (error) {
-    showNotify({ type: "danger", title: t("myPage.templates.saveFailed", { e: errorMessage(error) }) });
-  } finally {
-    templateImporting.value = false;
-  }
-};
-
-const deleteCustomTemplate = (name: string) => {
-  Dialog({
-    title: t("myPage.templates.deleteTitle"),
-    content: t("myPage.templates.deleteContent", { name }),
-    popClass: "auto-dialog",
-    okText: t("myPage.btn.delete"),
-    cancelText: t("myPage.btn.cancel"),
-    closeOnClickOverlay: true,
-    onOk: async () => {
-      const res = await cloudflareApi.deleteTemplate(name);
-      if (res?.data?.status === "success") {
-        await fetchTemplates();
-        showNotify({ type: "success", title: t("myPage.templates.deleteSucceed") });
-      }
-    },
-  });
-};
-
 const restoreFromFile = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
@@ -411,8 +207,6 @@ const restoreFromFile = async (event: Event) => {
 };
 
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : String(error);
-
-onMounted(fetchTemplates);
 </script>
 
 <style lang="scss" scoped>
@@ -545,94 +339,6 @@ onMounted(fetchTemplates);
   color: var(--comment-text-color);
 }
 
-.template-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.template-item {
-  min-height: 54px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--divider-color);
-
-  &:last-child {
-    border-bottom: 0;
-  }
-}
-
-.template-text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.template-title,
-.template-meta {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.template-title {
-  font-size: 14px;
-  color: var(--primary-text-color);
-}
-
-.template-meta {
-  font-size: 12px;
-  color: var(--comment-text-color);
-}
-
-.template-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.template-import-panel {
-  height: 100%;
-  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  color: var(--second-text-color);
-
-  h2 {
-    margin: 0 0 4px;
-    font-size: 17px;
-    color: var(--primary-text-color);
-  }
-}
-
-.template-target-trigger {
-  box-shadow: none;
-  border-radius: var(--item-card-radios);
-  background: var(--background-color);
-}
-
-.template-content-editor {
-  flex: 1;
-  min-height: 220px;
-  border: 1px solid var(--divider-color);
-  border-radius: var(--item-card-radios);
-  background: var(--background-color);
-  overflow: auto;
-
-  :deep(.cmviewRef) {
-    min-height: 220px;
-  }
-
-  :deep(.cm-editor) {
-    min-height: 220px;
-  }
-}
-
 .title-wrapper {
   min-height: 48px;
   padding: 0 16px;
@@ -654,7 +360,6 @@ onMounted(fetchTemplates);
   cursor: default;
 }
 
-.storage-actions,
 .config-btn-wrapper {
   display: flex;
   align-items: center;
@@ -715,20 +420,6 @@ onMounted(fetchTemplates);
     align-items: flex-start;
     flex-direction: column;
     padding: 14px 16px;
-  }
-
-  .storage-actions {
-    flex-wrap: wrap;
-  }
-
-  .template-item {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .template-actions {
-    width: 100%;
-    justify-content: flex-end;
   }
 }
 </style>

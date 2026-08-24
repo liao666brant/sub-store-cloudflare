@@ -49,6 +49,7 @@ export default {
     pagesTitle: {
       sub: "Subscriptions",
       tools: "Compatibility Tools",
+      config: "Config",
       my: "Settings",
       subEditor: "Edit Subscription",
       sourceCreate: "Create Source",
@@ -62,6 +63,7 @@ export default {
   tabBar: {
     sub: "Subscriptions",
     tools: "Tools",
+    config: "Config",
     my: "Settings"
   },
   toolsPage: {
@@ -307,8 +309,8 @@ export default {
           placeholder: "Click on the right icon, The tag(s) (separated by comma) will be used for grouping."
         },
         template: {
-          label: "Rule Template",
-          pickerTitle: "Select Rule Template",
+          label: "Config Template",
+          pickerTitle: "Select Config Template",
           builtIn: "Built-in template",
           custom: "Custom template",
           tips: "Type: {type}\nTarget: {target}\n\nThe template writes proxy groups, rule providers, and routing rules into generated collection subscriptions."
@@ -711,38 +713,18 @@ export default {
   },
   myPage: {
     profile: {
-      desc: "Subscription aggregation, node processing, and cloud rule templates",
+      desc: "Subscription aggregation, node processing, and cloud config templates",
       runtime: "Runtime",
       storage: "Storage",
       version: "Version"
     },
     backup: {
       title: "Backup and Restore",
-      desc: "Export and restore sources, collections, rule templates, and request settings.",
+      desc: "Export and restore sources, collections, config templates, and request settings.",
       export: "Backup",
       restore: "Restore",
       restoreTitle: "Restore backup",
-      restoreContent: "Restoring will overwrite sources, collections, rule templates, and settings with the same names. Export a current backup first."
-    },
-    templates: {
-      title: "Rule Templates",
-      importFile: "Import file",
-      create: "New",
-      builtIn: "Built-in",
-      custom: "Custom",
-      editTitle: "Edit rule template",
-      importTitle: "Import rule template",
-      idPlaceholder: "Template ID, e.g. custom-mihomo",
-      namePlaceholder: "Display name, e.g. Custom Mihomo",
-      target: "Output target",
-      targetPickerTitle: "Select output target",
-      save: "Save template",
-      validationRequired: "Template ID and content are required",
-      saveSucceed: "Template saved",
-      saveFailed: "Failed to save template\n{e}",
-      deleteTitle: "Delete template",
-      deleteContent: "Delete template {name}?",
-      deleteSucceed: "Template deleted"
+      restoreContent: "Restoring will overwrite sources, collections, config templates, and settings with the same names. Export a current backup first."
     },
     request: {
       title: "Request Settings",
@@ -779,6 +761,36 @@ export default {
         failed: "Restore failed",
         failedWithError: "Restore failed\n{e}"
       }
+    }
+  },
+  configPage: {
+    templates: {
+      title: "Config Templates",
+      importFile: "Import file",
+      create: "New",
+      builtIn: "Built-in",
+      custom: "Custom",
+      editTitle: "Edit config template",
+      importTitle: "Import config template",
+      previewTitle: "Preview config template",
+      idPlaceholder: "Template ID, e.g. custom-mihomo",
+      namePlaceholder: "Display name, e.g. Custom Mihomo",
+      target: "Output target",
+      targetPickerTitle: "Select output target",
+      save: "Save template",
+      validationRequired: "Template ID and content are required",
+      saveSucceed: "Template saved",
+      saveFailed: "Failed to save template\n{e}",
+      deleteTitle: "Delete template",
+      deleteContent: "Delete template {name}?",
+      deleteSucceed: "Template deleted"
+    },
+    btn: {
+      cancel: "Cancel",
+      edit: "Edit",
+      save: "Save",
+      delete: "Delete",
+      preview: "Preview"
     }
   },
   comparePage: {

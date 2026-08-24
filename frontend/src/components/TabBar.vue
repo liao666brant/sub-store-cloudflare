@@ -9,6 +9,7 @@
     >
       <nut-tabbar-item class="tabbar-item" to="/subs" icon="link" :tab-title="t('tabBar.sub')" />
       <nut-tabbar-item class="tabbar-item" to="/tools" icon="category" :tab-title="t('tabBar.tools')" />
+      <nut-tabbar-item class="tabbar-item" to="/config" icon="checklist" :tab-title="t('tabBar.config')" />
       <nut-tabbar-item class="tabbar-item" to="/my" icon="setting" :tab-title="t('tabBar.my')" />
     </nut-tabbar>
   </div>
@@ -22,7 +23,7 @@
 
   const route = useRoute();
   const { t } = useI18n();
-  const routeList = ['/subs', '/tools', '/my'];
+  const routeList = ['/subs', '/tools', '/config', '/my'];
   const activeTab = ref(routeList.indexOf(route.path));
   const { isWideScreenNarrowModeActive } = useWideScreenNarrowMode();
 

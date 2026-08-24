@@ -23,6 +23,15 @@
         <div
           class="menu-item"
           :class="{ active: activeTab === 2 }"
+          @click="router.push('/config')"
+        >
+          <nut-icon name="checklist" size="22px" />
+          <span class="label" v-show="isExpanded">{{ $t('tabBar.config') }}</span>
+        </div>
+
+        <div
+          class="menu-item"
+          :class="{ active: activeTab === 3 }"
           @click="router.push('/my')"
         >
           <div class="icon-container">
@@ -45,7 +54,7 @@ import { useWindowSize } from '@vueuse/core';
 
 const route = useRoute();
 const router = useRouter();
-const routeList = ['/subs', '/tools', '/my'];
+const routeList = ['/subs', '/tools', '/config', '/my'];
 const activeTab = ref(routeList.indexOf(route.path));
 
 watch(
@@ -55,7 +64,8 @@ watch(
     if (matchedIndex === -1) {
       if (newPath.includes('/subs')) matchedIndex = 0;
       else if (newPath.includes('/tools')) matchedIndex = 1;
-      else if (newPath.includes('/my')) matchedIndex = 2;
+      else if (newPath.includes('/config')) matchedIndex = 2;
+      else if (newPath.includes('/my')) matchedIndex = 3;
     }
     if (matchedIndex !== -1) {
       activeTab.value = matchedIndex;

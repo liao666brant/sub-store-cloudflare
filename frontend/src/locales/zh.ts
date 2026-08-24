@@ -49,6 +49,7 @@ export default {
     pagesTitle: {
       sub: "订阅管理",
       tools: "兼容工具",
+      config: "配置",
       my: "设置",
       subEditor: "编辑订阅",
       sourceCreate: "新建订阅源",
@@ -62,6 +63,7 @@ export default {
   tabBar: {
     sub: "订阅",
     tools: "工具",
+    config: "配置",
     my: "设置"
   },
   toolsPage: {
@@ -225,7 +227,7 @@ export default {
     groupingTips: {
       open: "详情页分组说明",
       title: "详情页分组",
-      content: "详情页按显示、内容和操作分组，便于只维护订阅源、组合关系、节点处理和规则模板。",
+      content: "详情页按显示、内容和操作分组，便于只维护订阅源、组合关系、节点处理和配置模板。",
       goSettings: "确定",
       cancel: "取消"
     },
@@ -307,8 +309,8 @@ export default {
           placeholder: "点击右侧图标选择，标签(用 , 分隔) 将用于分组"
         },
         template: {
-          label: "规则模板",
-          pickerTitle: "选择规则模板",
+          label: "配置模板",
+          pickerTitle: "选择配置模板",
           builtIn: "内置模板",
           custom: "自定义模板",
           tips: "类型：{type}\n输出：{target}\n\n模板会在生成组合订阅时写入代理组、规则提供者和分流规则。"
@@ -711,38 +713,18 @@ export default {
   },
   myPage: {
     profile: {
-      desc: "订阅聚合、节点处理和云端规则模板",
+      desc: "订阅聚合、节点处理和云端配置模板",
       runtime: "运行环境",
       storage: "存储",
       version: "版本"
     },
     backup: {
       title: "备份与恢复",
-      desc: "导出和恢复订阅源、组合订阅、规则模板与请求设置。",
+      desc: "导出和恢复订阅源、组合订阅、配置模板与请求设置。",
       export: "备份",
       restore: "恢复",
       restoreTitle: "恢复备份",
-      restoreContent: "恢复会覆盖同名订阅源、组合订阅、规则模板和设置。建议先导出当前备份。"
-    },
-    templates: {
-      title: "规则模板",
-      importFile: "文件导入",
-      create: "新建",
-      builtIn: "内置模板",
-      custom: "自定义模板",
-      editTitle: "编辑规则模板",
-      importTitle: "导入规则模板",
-      idPlaceholder: "模板 ID，例如 custom-mihomo",
-      namePlaceholder: "显示名称，例如 Custom Mihomo",
-      target: "输出格式",
-      targetPickerTitle: "选择输出格式",
-      save: "保存模板",
-      validationRequired: "模板 ID 和内容不能为空",
-      saveSucceed: "模板已保存",
-      saveFailed: "模板保存失败\n{e}",
-      deleteTitle: "删除模板",
-      deleteContent: "确认删除模板 {name}？",
-      deleteSucceed: "模板已删除"
+      restoreContent: "恢复会覆盖同名订阅源、组合订阅、配置模板和设置。建议先导出当前备份。"
     },
     request: {
       title: "请求设置",
@@ -779,6 +761,36 @@ export default {
         failed: "恢复失败",
         failedWithError: "恢复失败\n{e}"
       }
+    }
+  },
+  configPage: {
+    templates: {
+      title: "配置模板",
+      importFile: "文件导入",
+      create: "新建",
+      builtIn: "内置模板",
+      custom: "自定义模板",
+      editTitle: "编辑配置模板",
+      importTitle: "导入配置模板",
+      previewTitle: "预览配置模板",
+      idPlaceholder: "模板 ID，例如 custom-mihomo",
+      namePlaceholder: "显示名称，例如 Custom Mihomo",
+      target: "输出格式",
+      targetPickerTitle: "选择输出格式",
+      save: "保存模板",
+      validationRequired: "模板 ID 和内容不能为空",
+      saveSucceed: "模板已保存",
+      saveFailed: "模板保存失败\n{e}",
+      deleteTitle: "删除模板",
+      deleteContent: "确认删除模板 {name}？",
+      deleteSucceed: "模板已删除"
+    },
+    btn: {
+      cancel: "取消",
+      edit: "编辑",
+      save: "保存",
+      delete: "删除",
+      preview: "预览"
     }
   },
   comparePage: {
