@@ -46,7 +46,7 @@ flowchart LR
 
 ## 测试策略
 
-- 日常检查：`pnpm run check`（Worker 类型检查、前端 locale 检查与生产构建）。
+- 日常检查：`pnpm run check`（Worker 类型检查、前端 locale 检查、前端单元测试与生产构建）。
 - Worker 集成测试：`pnpm run check:tests`，使用 Cloudflare Vitest 池、真实 D1 migrations 和 Worker 入口。
 - 发布门禁：`pnpm run check:release`；部署前可运行 `pnpm run deploy:dry-run`。
 - 按变更选择 `check:installer`、`check:worker-contract`、`check:deploy-experience`、`check:docs` 或 `check:scripts`，避免无关的完整发布门禁。

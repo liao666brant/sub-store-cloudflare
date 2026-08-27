@@ -42,7 +42,7 @@
     "check:audit": "pnpm audit --prod --audit-level=high",
     "check:runtime": "node scripts/smoke-worker.mjs",
     "check:scripts": "node scripts/check-script-budget.mjs",
-    "check:frontend": "pnpm --dir frontend run check:locales && pnpm run build:frontend",
+    "check:frontend": "pnpm --dir frontend run check:locales && pnpm --dir frontend run test && pnpm run build:frontend",
     "check": "pnpm run check:worker && pnpm run check:frontend",
     "check:deploy-config": "node scripts/check-deploy-config.mjs",
     "deploy": "pnpm run scripts:generate && pnpm run db:migrations:apply && pnpm --dir cloudflare exec wrangler deploy --config ../wrangler.jsonc",

@@ -8,7 +8,8 @@
     "dev:production": "vite --host --mode production",
     "build": "vue-tsc --noEmit && vite build",
     "check:locales": "node scripts/check-locales.mjs",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "test": "vitest run"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.12.0",
@@ -51,6 +52,7 @@
     "vite": "^6.4.3",
     "vite-plugin-style-import": "^2.0.0",
     "vite-plugin-svg-icons": "^2.0.1",
+    "vitest": "^4.1.10",
     "vue-tsc": "^2.2.12"
   }
 }

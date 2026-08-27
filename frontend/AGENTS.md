@@ -33,8 +33,9 @@ Vue 3 + Vite 管理界面：认证 token 的浏览器侧保存、订阅源与集
 ## 测试与质量
 
 - `pnpm --dir frontend run check:locales` 校验 locale 覆盖和静态使用。
+- `pnpm --dir frontend run test` 运行 vitest 单元测试，覆盖 `src/utils` 纯逻辑模块（流量换算、请求并发、搜索、预览节点提取等）。
 - `pnpm --dir frontend run build` 先执行 `vue-tsc --noEmit`，再执行 Vite 生产构建。
-- 当前未发现单独的前端单元测试目录；交互改动至少运行 locale 检查与生产构建。
+- 根目录 `check:frontend` 串联 locale 检查、单元测试与生产构建；交互改动至少运行 locale 检查与生产构建。
 
 ## 常见问题
 
@@ -50,6 +51,7 @@ Vue 3 + Vite 管理界面：认证 token 的浏览器侧保存、订阅源与集
 - `frontend/src/store/subs.ts`、`frontend/src/hooks/useBackend.ts`：核心业务状态与后端选择。
 - `frontend/src/views/Sub.vue`、`frontend/src/views/SubEditor.vue`、`frontend/src/views/Tools.vue`、`frontend/src/views/Config.vue`（配置模板页）：主要业务视图。
 - `frontend/src/locales/zh.ts`、`frontend/src/locales/en.ts`、`frontend/scripts/check-locales.mjs`：国际化事实源和校验。
+- `frontend/vitest.config.ts`、`frontend/test/`：单元测试配置与用例。
 
 ## 精简变更记录
 

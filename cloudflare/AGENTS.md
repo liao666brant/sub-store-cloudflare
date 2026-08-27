@@ -36,7 +36,7 @@ Cloudflare Worker 运行时：托管前端静态资源，提供受 admin token �
 
 - `pnpm --dir cloudflare run check`：脚本注册表、Worker 与测试 TypeScript 检查。
 - `pnpm --dir cloudflare run test`：Cloudflare Vitest 池应用真实 D1 migrations 并请求真实 Worker 入口。
-- 测试覆盖鉴权与安全头、脚本动作、下载专用域、部分更新、空 sourceIds、导入/导出、转换、下载授权和回收站。
+- 测试覆盖鉴权与安全头、脚本动作、下载专用域、部分更新、空 sourceIds、导入/导出、转换、下载授权、回收站、预览、模板 CRUD、排序、分享过期、流量信息与节点信息查询。
 
 ## 常见问题
 
